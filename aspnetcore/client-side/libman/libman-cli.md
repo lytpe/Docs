@@ -1,13 +1,14 @@
 ---
-title: Use the LibMan command-line interface (CLI) with ASP.NET Core
+title: Use the LibMan CLI with ASP.NET Core
 author: scottaddie
-description: Learn how to use the LibMan command-line interface (CLI) in an ASP.NET Core project.
+description: Learn how to use the LibMan CLI in an ASP.NET Core project.
 ms.author: scaddie
 ms.custom: mvc
-ms.date: 08/30/2018
+ms.date: 11/12/2019
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: client-side/libman/libman-cli
 ---
-# Use the LibMan command-line interface (CLI) with ASP.NET Core
+# Use the LibMan CLI with ASP.NET Core
 
 By [Scott Addie](https://twitter.com/Scott_Addie)
 
@@ -21,7 +22,7 @@ The [LibMan](xref:client-side/libman/index) CLI is a cross-platform tool that's 
 
 To install the LibMan CLI:
 
-```console
+```dotnetcli
 dotnet tool install -g Microsoft.Web.LibraryManager.Cli
 ```
 
@@ -29,7 +30,7 @@ A [.NET Core Global Tool](/dotnet/core/tools/global-tools#install-a-global-tool)
 
 To install the LibMan CLI from a specific NuGet package source:
 
-```console
+```dotnetcli
 dotnet tool install -g Microsoft.Web.LibraryManager.Cli --version 1.0.94-g606058a278 --add-source C:\Temp\
 ```
 
@@ -189,10 +190,10 @@ Consider the following *libman.json* file:
 }
 ```
 
-To install the jQuery version 3.2.1 *jquery.min.js* file to the *wwwroot\scripts\jquery* folder using the CDNJS provider:
+To install the jQuery version 3.2.1 *jquery.min.js* file to the *wwwroot/scripts/jquery* folder using the CDNJS provider:
 
 ```console
-libman install jquery@3.2.1 --provider cdnjs --destination wwwroot\scripts\jquery --files jquery.min.js
+libman install jquery@3.2.1 --provider cdnjs --destination wwwroot/scripts/jquery --files jquery.min.js
 ```
 
 The *libman.json* file resembles the following:
@@ -204,7 +205,7 @@ The *libman.json* file resembles the following:
   "libraries": [
     {
       "library": "jquery@3.2.1",
-      "destination": "wwwroot\\scripts\\jquery",
+      "destination": "wwwroot/scripts/jquery",
       "files": [
         "jquery.min.js"
       ]
@@ -235,7 +236,7 @@ After accepting the default destination, the *libman.json* file resembles the fo
   "libraries": [
     {
       "library": "jquery@3.2.1",
-      "destination": "wwwroot\\scripts\\jquery",
+      "destination": "wwwroot/scripts/jquery",
       "files": [
         "jquery.min.js"
       ]
@@ -243,7 +244,7 @@ After accepting the default destination, the *libman.json* file resembles the fo
     {
       "library": "C:\\temp\\contosoCalendar\\",
       "provider": "filesystem",
-      "destination": "wwwroot\\lib\\contosoCalendar",
+      "destination": "wwwroot/lib/contosoCalendar",
       "files": [
         "calendar.js",
         "calendar.css"

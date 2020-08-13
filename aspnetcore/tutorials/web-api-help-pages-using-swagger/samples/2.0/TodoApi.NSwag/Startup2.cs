@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-#region snippet_StartupConfigureImports
-using NJsonSchema;
-using NSwag.AspNetCore;
-using System.Reflection;
-#endregion
 using TodoApi.Models;
 
 namespace TodoApi
@@ -18,6 +13,30 @@ namespace TodoApi
             services.AddDbContext<TodoContext>(opt =>
                 opt.UseInMemoryDatabase("TodoList"));
             services.AddMvc();
+
+            #region snippet_AddSwaggerDocument
+            services.AddSwaggerDocument(config =>
+            {
+                config.PostProcess = document =>
+                {
+                    document.Info.Version = "v1";
+                    document.Info.Title = "ToDo API";
+                    document.Info.Description = "A simple ASP.NET Core web API";
+                    document.Info.TermsOfService = "None";
+                    document.Info.Contact = new NSwag.OpenApiContact
+                    {
+                        Name = "Shayne Boyer",
+                        Email = string.Empty,
+                        Url = "https://twitter.com/spboyer"
+                    };
+                    document.Info.License = new NSwag.OpenApiLicense
+                    {
+                        Name = "Use under LICX",
+                        Url = "https://example.com/license"
+                    };
+                };
+            });
+            #endregion snippet_AddSwaggerDocument
         }
         #endregion snippet_ConfigureServices
 
@@ -26,37 +45,8 @@ namespace TodoApi
         {
             app.UseStaticFiles();
 
-            #region snippet_UseSwagger
-            // Register the Swagger generator
-            app.UseSwagger(typeof(Startup).Assembly, settings =>
-            {
-                settings.PostProcess = document =>
-                {
-                    document.Info.Version = "v1";
-                    document.Info.Title = "ToDo API";
-                    document.Info.Description = "A simple ASP.NET Core web API";
-                    document.Info.TermsOfService = "None";
-                    document.Info.Contact = new NSwag.SwaggerContact
-                    {
-                        Name = "Shayne Boyer",
-                        Email = string.Empty,
-                        Url = "https://twitter.com/spboyer"
-                    };
-                    document.Info.License = new NSwag.SwaggerLicense
-                    {
-                        Name = "Use under LICX",
-                        Url = "https://example.com/license"
-                    };
-                };
-            });
-            #endregion snippet_UseSwagger
-
-            // Enable the Swagger UI middleware and the Swagger generator
-            app.UseSwaggerUi(typeof(Startup).GetTypeInfo().Assembly, settings =>
-            {
-                settings.GeneratorSettings.DefaultPropertyNameHandling =
-                    PropertyNameHandling.CamelCase;
-            });
+            app.UseOpenApi();
+            app.UseSwaggerUi3();
 
             app.UseMvc();
         }

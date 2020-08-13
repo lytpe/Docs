@@ -4,6 +4,7 @@ author: rick-anderson
 description: Discover how to enable QR code generation for TOTP authenticator apps that work with ASP.NET Core two-factor authentication.
 ms.author: riande
 ms.date: 08/14/2018
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: security/authentication/identity-enable-qrcodes
 ---
 
@@ -20,6 +21,8 @@ QR Codes requires ASP.NET Core 2.0 or later.
 ASP.NET Core ships with support for authenticator applications for individual authentication. Two factor authentication (2FA) authenticator apps, using a Time-based One-time Password Algorithm (TOTP), are the industry recommended approach for 2FA. 2FA using TOTP is preferred to SMS 2FA. An authenticator app provides a 6 to 8 digit code which users must enter after confirming their username and password. Typically an authenticator app is installed on a smart phone.
 
 The ASP.NET Core web app templates support authenticators, but don't provide support for QRCode generation. QRCode generators ease the setup of 2FA. This document will guide you through adding [QR Code](https://wikipedia.org/wiki/QR_code) generation to the 2FA configuration page.
+
+Two factor authentication does not happen using an external authentication provider, such as [Google](xref:security/authentication/google-logins) or [Facebook](xref:security/authentication/facebook-logins). External logins are protected by whatever mechanism the external login provider provides. Consider, for example, the [Microsoft](xref:security/authentication/microsoft-logins) authentication provider requires a hardware key or another 2FA approach. If the default templates enforced "local" 2FA then users would be required to satisfy two 2FA approaches, which is not a commonly used scenario.
 
 ## Adding QR Codes to the 2FA configuration page
 
@@ -78,7 +81,7 @@ Run your app and ensure that you can scan the QR code and validate the code the 
 
 ::: moniker range=">= aspnetcore-2.1"
 
-The site name in the QR Code is taken from the project name you choose when initially creating your project. You can change it by looking for the `GenerateQrCodeUri(string email, string unformattedKey)` method in the */Areas/Identity/Pages/Account/Manage/EnableAuthenticator.cshtml*.
+The site name in the QR Code is taken from the project name you choose when initially creating your project. You can change it by looking for the `GenerateQrCodeUri(string email, string unformattedKey)` method in the */Areas/Identity/Pages/Account/Manage/EnableAuthenticator.cshtml.cs*.
 
 ::: moniker-end
 
@@ -92,11 +95,11 @@ The site name in the QR Code is taken from the project name you choose when init
 
 The default code from the template looks as follows:
 
-```c#
+```csharp
 private string GenerateQrCodeUri(string email, string unformattedKey)
 {
     return string.Format(
-        AuthenicatorUriFormat,
+        AuthenticatorUriFormat,
         _urlEncoder.Encode("Razor Pages"),
         _urlEncoder.Encode(email),
         unformattedKey);

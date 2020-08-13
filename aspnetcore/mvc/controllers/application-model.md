@@ -3,7 +3,8 @@ title: Work with the application model in ASP.NET Core
 author: ardalis
 description: Learn how to read and manipulate the application model to modify how MVC elements behave in ASP.NET Core.
 ms.author: riande
-ms.date: 10/14/2016
+ms.date: 12/05/2019
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: mvc/controllers/application-model
 ---
 # Work with the application model in ASP.NET Core
@@ -19,9 +20,9 @@ The ASP.NET Core MVC application model include both abstract interfaces and conc
 The ASP.NET Core MVC Application Model has the following structure:
 
 * ApplicationModel
-	* Controllers (ControllerModel)
-		* Actions (ActionModel)
-			* Parameters (ParameterModel)
+  * Controllers (ControllerModel)
+    * Actions (ActionModel)
+      * Parameters (ParameterModel)
 
 Each level of the model has access to a common `Properties` collection, and lower levels can access and overwrite property values set by higher levels in the hierarchy. The properties are persisted to the `ActionDescriptor.Properties` when the actions are created. Then when a request is being handled, any properties a convention added or modified can be accessed through `ActionContext.ActionDescriptor.Properties`. Using properties is a great way to configure your filters, model binders, etc. on a per-action basis.
 
@@ -57,7 +58,7 @@ The `DefaultApplicationModelProvider` establishes many of the default behaviors 
 * Adding action method parameters to the context
 * Applying route and other attributes
 
-Some built-in behaviors are implemented by the `DefaultApplicationModelProvider`. This provider is responsible for constructing the [`ControllerModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.controllermodel), which in turn references [`ActionModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.actionmodel#Microsoft_AspNetCore_Mvc_ApplicationModels_ActionModel), [`PropertyModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.propertymodel), and [`ParameterModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.parametermodel#Microsoft_AspNetCore_Mvc_ApplicationModels_ParameterModel) instances. The `DefaultApplicationModelProvider` class is an internal framework implementation detail that can and will change in the future. 
+Some built-in behaviors are implemented by the `DefaultApplicationModelProvider`. This provider is responsible for constructing the [`ControllerModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.controllermodel), which in turn references [`ActionModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.actionmodel), [`PropertyModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.propertymodel), and [`ParameterModel`](/dotnet/api/microsoft.aspnetcore.mvc.applicationmodels.parametermodel) instances. The `DefaultApplicationModelProvider` class is an internal framework implementation detail that can and will change in the future. 
 
 The `AuthorizationApplicationModelProvider` is responsible for applying the behavior associated with the `AuthorizeFilter` and `AllowAnonymousFilter` attributes. [Learn more about these attributes](xref:security/authorization/simple).
 
@@ -65,7 +66,7 @@ The `CorsApplicationModelProvider` implements behavior associated with the `IEna
 
 ## Conventions
 
-The application model defines convention abstractions that provide a simpler way to customize the behavior of the models than overriding the entire model or provider. These abstractions are the recommended way to modify your app's behavior. Conventions provide a way for you to write code that will dynamically apply customizations. While [filters](xref:mvc/controllers/filters) provide a means of modifying the framework's behavior, customizations let you control how the whole app is wired together.
+The application model defines convention abstractions that provide a simpler way to customize the behavior of the models than overriding the entire model or provider. These abstractions are the recommended way to modify your app's behavior. Conventions provide a way for you to write code that will dynamically apply customizations. While [filters](xref:mvc/controllers/filters) provide a means of modifying the framework's behavior, customizations let you control how the whole app works together.
 
 The following conventions are available:
 
@@ -163,7 +164,7 @@ ASP.NET Core MVC uses a different set of conventions from ASP.NET Web API 2. Usi
 
 To use the Web API Compatibility Shim, you need to add the package to your project and then add the conventions to MVC by calling `AddWebApiConventions` in `Startup`:
 
-```c#
+```csharp
 services.AddMvc().AddWebApiConventions();
 ```
 
@@ -190,7 +191,7 @@ The `UseWebApiParameterConventionsAttribute` is used to apply the `WebApiParamet
 
 The `UseWebApiRoutesAttribute` controls whether the `WebApiApplicationModelConvention` controller convention is applied. When enabled, this convention is used to add support for [areas](xref:mvc/controllers/areas) to the route.
 
-In addition to a set of conventions, the compatibility package includes a `System.Web.Http.ApiController` base class that replaces the one provided by Web API. This allows your controllers written for Web API and inheriting from its `ApiController` to work as they were designed, while running on ASP.NET Core MVC. This base controller class is decorated with all of the `UseWebApi*` attributes listed above. The `ApiController` exposes properties, methods, and result types that are compatible with those found in Web API.
+In addition to a set of conventions, the compatibility package includes a `System.Web.Http.ApiController` base class that replaces the one provided by Web API. This allows your controllers written for Web API and inheriting from its `ApiController` to work as they were designed, while running on ASP.NET Core MVC. All of the `UseWebApi*` attributes listed earlier are applied to the base controller class. The `ApiController` exposes properties, methods, and result types that are compatible with those found in Web API.
 
 ## Using ApiExplorer to Document Your App
 

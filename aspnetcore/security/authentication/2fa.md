@@ -4,22 +4,25 @@ author: rick-anderson
 description: Learn how to set up two-factor authentication (2FA) with an ASP.NET Core app.
 monikerRange: '< aspnetcore-2.0'
 ms.author: riande
-ms.date: 08/15/2017
+ms.date: 09/22/2018
+ms.custom: "mvc, seodec18"
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: security/authentication/2fa
 ---
 # Two-factor authentication with SMS in ASP.NET Core
 
 By [Rick Anderson](https://twitter.com/RickAndMSFT) and [Swiss-Devs](https://github.com/Swiss-Devs)
 
- Two factor authentication (2FA) authenticator apps, using a Time-based One-time Password Algorithm (TOTP), are the industry recommended approach for 2FA. 2FA using TOTP is preferred to SMS 2FA. For more information, see [Enable QR Code generation for TOTP authenticator apps in ASP.NET Core](xref:security/authentication/identity-enable-qrcodes) for ASP.NET Core 2.0 and later.
+>[!WARNING]
+> Two factor authentication (2FA) authenticator apps, using a Time-based One-time Password Algorithm (TOTP), are the industry recommended approach for 2FA. 2FA using TOTP is preferred to SMS 2FA. For more information, see [Enable QR Code generation for TOTP authenticator apps in ASP.NET Core](xref:security/authentication/identity-enable-qrcodes) for ASP.NET Core 2.0 and later.
 
 This tutorial shows how to set up two-factor authentication (2FA) using SMS. Instructions are given for [twilio](https://www.twilio.com/) and [ASPSMS](https://www.aspsms.com/asp.net/identity/core/testcredits/), but you can use any other SMS provider. We recommend you complete [Account Confirmation and Password Recovery](xref:security/authentication/accconfirm) before starting this tutorial.
 
-View the [completed sample](https://github.com/aspnet/Docs/tree/master/aspnetcore/security/authentication/2fa/sample/Web2FA). [How to download](xref:tutorials/index#how-to-download-a-sample).
+[View or download sample code](https://github.com/dotnet/AspNetCore.Docs/tree/master/aspnetcore/security/authentication/2fa/sample/Web2FA). [How to download](xref:index#how-to-download-a-sample).
 
 ## Create a new ASP.NET Core project
 
-Create a new ASP.NET Core web app named `Web2FA` with individual user accounts. Follow the instructions in [Enforce SSL in an ASP.NET Core app](xref:security/enforcing-ssl) to set up and require SSL.
+Create a new ASP.NET Core web app named `Web2FA` with individual user accounts. Follow the instructions in <xref:security/enforcing-ssl> to set up and require HTTPS.
 
 ### Create an SMS account
 
@@ -28,9 +31,11 @@ Create an SMS account, for example, from [twilio](https://www.twilio.com/) or [A
 #### Figuring out SMS Provider credentials
 
 **Twilio:**
+
 From the Dashboard tab of your Twilio account, copy the **Account SID** and **Auth token**.
 
 **ASPSMS:**
+
 From your account settings, navigate to **Userkey** and copy it together with your **Password**.
 
 We will later store these values in with the secret-manager tool within the keys `SMSAccountIdentification` and `SMSAccountPassword`.
@@ -45,12 +50,11 @@ Within the Unlock Originators Menu, unlock one or more Originators or choose an 
 
 We will later store this value with the secret-manager tool within the key `SMSAccountFrom`.
 
-
 ### Provide credentials for the SMS service
 
 We'll use the [Options pattern](xref:fundamentals/configuration/options) to access the user account and key settings.
 
-   * Create a class to fetch the secure SMS key. For this sample, the `SMSoptions` class is created in the *Services/SMSoptions.cs* file.
+* Create a class to fetch the secure SMS key. For this sample, the `SMSoptions` class is created in the *Services/SMSoptions.cs* file.
 
 [!code-csharp[](2fa/sample/Web2FA/Services/SMSoptions.cs)]
 
@@ -60,22 +64,23 @@ Set the `SMSAccountIdentification`, `SMSAccountPassword` and `SMSAccountFrom` wi
 C:/Web2FA/src/WebApp1>dotnet user-secrets set SMSAccountIdentification 12345
 info: Successfully saved SMSAccountIdentification = 12345 to the secret store.
 ```
+
 * Add the NuGet package for the SMS provider. From the Package Manager Console (PMC) run:
 
 **Twilio:**
+
 `Install-Package Twilio`
 
 **ASPSMS:**
-`Install-Package ASPSMS`
 
+`Install-Package ASPSMS`
 
 * Add code in the *Services/MessageServices.cs* file to enable SMS. Use either the Twilio or the ASPSMS section:
 
-
-**Twilio:**
+**Twilio:**  
 [!code-csharp[](2fa/sample/Web2FA/Services/MessageServices_twilio.cs)]
 
-**ASPSMS:**
+**ASPSMS:**  
 [!code-csharp[](2fa/sample/Web2FA/Services/MessageServices_ASPSMS.cs)]
 
 ### Configure startup to use `SMSoptions`
@@ -86,7 +91,7 @@ Add `SMSoptions` to the service container in the `ConfigureServices` method in t
 
 ### Enable two-factor authentication
 
-Open the *Views/Manage/Index.cshtml* Razor view file and remove the comment characters (so no markup is commnted out).
+Open the *Views/Manage/Index.cshtml* Razor view file and remove the comment characters (so no markup is commented out).
 
 ## Log in with two-factor authentication
 
@@ -96,7 +101,7 @@ Open the *Views/Manage/Index.cshtml* Razor view file and remove the comment char
 
 * Tap on your user name, which activates the `Index` action method in Manage controller. Then tap the phone number **Add** link.
 
-![Manage view](2fa/_static/login2fa2.png)
+![Manage view - tap the "add" link](2fa/_static/login2fa2.png)
 
 * Add a phone number that will receive the verification code, and tap **Send verification code**.
 
@@ -110,11 +115,11 @@ If you don't get a text message, see twilio log page.
 
 * The Manage view shows your phone number was added successfully.
 
-![Manage view](2fa/_static/login2fa5.png)
+![Manage view - phone number added successfully](2fa/_static/login2fa5.png)
 
 * Tap **Enable** to enable two-factor authentication.
 
-![Manage view](2fa/_static/login2fa6.png)
+![Manage view - enable two-factor authentication](2fa/_static/login2fa6.png)
 
 ### Test two-factor authentication
 

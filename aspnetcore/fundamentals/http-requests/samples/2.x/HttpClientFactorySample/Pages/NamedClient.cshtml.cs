@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using HttpClientFactorySample.GitHub;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json;
 
 namespace HttpClientFactorySample.Pages
 {
@@ -28,7 +27,7 @@ namespace HttpClientFactorySample.Pages
         public async Task OnGet()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, 
-                "repos/aspnet/docs/pulls");
+                "repos/aspnet/AspNetCore.Docs/pulls");
 
             var client = _clientFactory.CreateClient("github");
 

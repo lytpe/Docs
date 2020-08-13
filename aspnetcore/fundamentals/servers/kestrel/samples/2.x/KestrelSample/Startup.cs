@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Features;
-using Microsoft.Extensions.Logging;
 
 namespace KestrelSample
 {
@@ -56,12 +55,23 @@ namespace KestrelSample
             {
                 context.Features.Get<IHttpMaxRequestBodySizeFeature>()
                     .MaxRequestBodySize = 10 * 1024;
-                context.Features.Get<IHttpMinRequestBodyDataRateFeature>()
-                    .MinDataRate = new MinDataRate(bytesPerSecond: 100, 
-                        gracePeriod: TimeSpan.FromSeconds(10));
-                context.Features.Get<IHttpMinResponseDataRateFeature>()
-                    .MinDataRate = new MinDataRate(bytesPerSecond: 100, 
-                        gracePeriod: TimeSpan.FromSeconds(10));
+
+                var minRequestRateFeature = 
+                    context.Features.Get<IHttpMinRequestBodyDataRateFeature>();
+                var minResponseRateFeature = 
+                    context.Features.Get<IHttpMinResponseDataRateFeature>();
+
+                if (minRequestRateFeature != null)
+                {
+                    minRequestRateFeature.MinDataRate = new MinDataRate(
+                        bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
+                }
+
+                if (minResponseRateFeature != null)
+                {
+                    minResponseRateFeature.MinDataRate = new MinDataRate(
+                        bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
+                }
             #endregion
                 context.Response.ContentType = "text/html";
                 await context.Response

@@ -5,6 +5,7 @@ description: Learn how to use LibMan in an ASP.NET Core project with Visual Stud
 ms.author: scaddie
 ms.custom: mvc
 ms.date: 08/20/2018
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: client-side/libman/libman-vs
 ---
 # Use LibMan with ASP.NET Core in Visual Studio
@@ -18,11 +19,11 @@ Visual Studio has built-in support for [LibMan](xref:client-side/libman/index) i
 * Search dialog for finding libraries and adding the files to a project.
 * Editing support for *libman.json*&mdash;the LibMan manifest file.
 
-[View or download sample code](https://github.com/aspnet/Docs/tree/master/aspnetcore/client-side/libman/samples/) [(how to download)](xref:tutorials/index#how-to-download-a-sample)
+[View or download sample code](https://github.com/dotnet/AspNetCore.Docs/tree/master/aspnetcore/client-side/libman/samples/) [(how to download)](xref:index#how-to-download-a-sample)
 
 ## Prerequisites
 
-* Visual Studio 2017 version 15.8 or later with the **ASP.NET and web development** workload
+* [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/?utm_medium=microsoft&utm_source=docs.microsoft.com&utm_campaign=inline+link&utm_content=download+vs2019) with the **ASP.NET and web development** workload
 
 ## Add library files
 
@@ -88,7 +89,7 @@ To open *libman.json* for editing, the following options exist:
 
 **&#8224;** If the *libman.json* file doesn't already exist in the project root, it will be created with the default item template content.
 
-Visual Studio offers rich JSON editing support such as colorization, formatting, IntelliSense, and schema validation. The LibMan manifest's JSON schema is found at [http://json.schemastore.org/libman](http://json.schemastore.org/libman).
+Visual Studio offers rich JSON editing support such as colorization, formatting, IntelliSense, and schema validation. The LibMan manifest's JSON schema is found at [https://json.schemastore.org/libman](https://json.schemastore.org/libman).
 
 With the following manifest file, LibMan retrieves files per the configuration defined in the `libraries` property. An explanation of the object literals defined within `libraries` follows:
 

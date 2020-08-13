@@ -4,6 +4,7 @@ author: ardalis
 description: Shows how to prevent open redirect attacks against an ASP.NET Core app
 ms.author: riande
 ms.date: 07/07/2017
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: security/preventing-open-redirects
 ---
 # Prevent open redirect attacks in ASP.NET Core
@@ -52,7 +53,7 @@ public IActionResult SomeAction(string redirectUrl)
 
 ### IsLocalUrl
 
-Use the [IsLocalUrl](/dotnet/api/Microsoft.AspNetCore.Mvc.IUrlHelper?view=aspnetcore-2.0#Microsoft_AspNetCore_Mvc_IUrlHelper_IsLocalUrl_System_String_) method to test URLs before redirecting:
+Use the [IsLocalUrl](/dotnet/api/Microsoft.AspNetCore.Mvc.IUrlHelper.islocalurl#Microsoft_AspNetCore_Mvc_IUrlHelper_IsLocalUrl_System_String_) method to test URLs before redirecting:
 
 The following example shows how to check whether a URL is local before redirecting.
 

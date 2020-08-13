@@ -1,23 +1,35 @@
 ---
 title: ASP.NET Core Web Host
-author: guardrex
-description: Learn about the web host in ASP.NET Core, which is responsible for app startup and lifetime management.
+author: rick-anderson
+description: Learn about Web Host in ASP.NET Core, which is responsible for app startup and lifetime management.
+monikerRange: '>= aspnetcore-2.1'
 ms.author: riande
 ms.custom: mvc
-ms.date: 06/19/2018
+ms.date: 10/07/2019
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: fundamentals/host/web-host
 ---
 # ASP.NET Core Web Host
 
-By [Luke Latham](https://github.com/guardrex)
+ASP.NET Core apps configure and launch a *host*. The host is responsible for app startup and lifetime management. At a minimum, the host configures a server and a request processing pipeline. The host can also set up logging, dependency injection, and configuration.
 
-ASP.NET Core apps configure and launch a *host*. The host is responsible for app startup and lifetime management. At a minimum, the host configures a server and a request processing pipeline. This topic covers the ASP.NET Core Web Host ([IWebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.iwebhostbuilder)), which is useful for hosting web apps. For coverage of the .NET Generic Host ([IHostBuilder](/dotnet/api/microsoft.extensions.hosting.ihostbuilder)), see <xref:fundamentals/host/generic-host>.
+::: moniker range=">= aspnetcore-3.0"
+
+This article covers the Web Host, which remains available only for backward compatibility. The [Generic Host](xref:fundamentals/host/generic-host) is recommended for all app types.
+
+::: moniker-end
+
+::: moniker range="< aspnetcore-3.0"
+
+This article covers the Web Host, which is for hosting web apps. For other kinds of apps, use the [Generic Host](xref:fundamentals/host/generic-host).
+
+::: moniker-end
 
 ## Set up a host
 
-::: moniker range=">= aspnetcore-2.0"
+Create a host using an instance of [IWebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.iwebhostbuilder). This is typically performed in the app's entry point, the `Main` method.
 
-Create a host using an instance of [IWebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.iwebhostbuilder). This is typically performed in the app's entry point, the `Main` method. In the project templates, `Main` is located in *Program.cs*. A typical *Program.cs* calls [CreateDefaultBuilder](/dotnet/api/microsoft.aspnetcore.webhost.createdefaultbuilder) to start setting up a host:
+In the project templates, `Main` is located in *Program.cs*. A typical app calls [CreateDefaultBuilder](/dotnet/api/microsoft.aspnetcore.webhost.createdefaultbuilder) to start setting up a host:
 
 ```csharp
 public class Program
@@ -33,21 +45,23 @@ public class Program
 }
 ```
 
+The code that calls `CreateDefaultBuilder` is in a method named `CreateWebHostBuilder`, which separates it from the code in `Main` that calls `Run` on the builder object. This separation is required if you use [Entity Framework Core tools](/ef/core/miscellaneous/cli/). The tools expect to find a `CreateWebHostBuilder` method that they can call at design time to configure the host without running the app. An alternative is to implement `IDesignTimeDbContextFactory`. For more information, see [Design-time DbContext Creation](/ef/core/miscellaneous/cli/dbcontext-creation).
+
 `CreateDefaultBuilder` performs the following tasks:
 
-* Configures [Kestrel](xref:fundamentals/servers/kestrel) as the web server and configures the server using the app's hosting configuration providers. For the Kestrel default options, see <xref:fundamentals/servers/kestrel#kestrel-options>.
-* Sets the content root to the path returned by [Directory.GetCurrentDirectory](/dotnet/api/system.io.directory.getcurrentdirectory).
+* Configures [Kestrel](xref:fundamentals/servers/kestrel) server as the web server using the app's hosting configuration providers. For the Kestrel server's default options, see <xref:fundamentals/servers/kestrel#kestrel-options>.
+* Sets the [content root](xref:fundamentals/index#content-root) to the path returned by [Directory.GetCurrentDirectory](/dotnet/api/system.io.directory.getcurrentdirectory).
 * Loads [host configuration](#host-configuration-values) from:
   * Environment variables prefixed with `ASPNETCORE_` (for example, `ASPNETCORE_ENVIRONMENT`).
   * Command-line arguments.
-* Loads app configuration from:
+* Loads app configuration in the following order from:
   * *appsettings.json*.
   * *appsettings.{Environment}.json*.
-  * [User secrets](xref:security/app-secrets) when the app runs in the `Development` environment using the entry assembly.
+  * [Secret Manager](xref:security/app-secrets) when the app runs in the `Development` environment using the entry assembly.
   * Environment variables.
   * Command-line arguments.
 * Configures [logging](xref:fundamentals/logging/index) for console and debug output. Logging includes [log filtering](xref:fundamentals/logging/index#log-filtering) rules specified in a Logging configuration section of an *appsettings.json* or *appsettings.{Environment}.json* file.
-* When running behind IIS, enables [IIS integration](xref:host-and-deploy/iis/index). Configures the base path and port the server listens on when using the [ASP.NET Core Module](xref:fundamentals/servers/aspnet-core-module). The module creates a reverse proxy between IIS and Kestrel. Also configures the app to [capture startup errors](#capture-startup-errors). For the IIS default options, see <xref:host-and-deploy/iis/index#iis-options>.
+* When running behind IIS with the [ASP.NET Core Module](xref:host-and-deploy/aspnet-core-module), `CreateDefaultBuilder` enables [IIS Integration](xref:host-and-deploy/iis/index), which configures the app's base address and port. IIS Integration also configures the app to [capture startup errors](#capture-startup-errors). For the IIS default options, see <xref:host-and-deploy/iis/index#iis-options>.
 * Sets [ServiceProviderOptions.ValidateScopes](/dotnet/api/microsoft.extensions.dependencyinjection.serviceprovideroptions.validatescopes) to `true` if the app's environment is Development. For more information, see [Scope validation](#scope-validation).
 
 The configuration defined by `CreateDefaultBuilder` can be overridden and augmented by [ConfigureAppConfiguration](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderextensions.configureappconfiguration), [ConfigureLogging](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderextensions.configurelogging), and other methods and extension methods of [IWebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.iwebhostbuilder). A few examples follow:
@@ -74,6 +88,22 @@ The configuration defined by `CreateDefaultBuilder` can be overridden and augmen
         ...
     ```
 
+::: moniker range=">= aspnetcore-2.2"
+
+* The following call to `ConfigureKestrel` overrides the default [Limits.MaxRequestBodySize](/dotnet/api/microsoft.aspnetcore.server.kestrel.core.kestrelserverlimits.maxrequestbodysize) of 30,000,000 bytes established when Kestrel was configured by `CreateDefaultBuilder`:
+
+    ```csharp
+    WebHost.CreateDefaultBuilder(args)
+        .ConfigureKestrel((context, options) =>
+        {
+            options.Limits.MaxRequestBodySize = 20000000;
+        });
+    ```
+
+::: moniker-end
+
+::: moniker range="< aspnetcore-2.2"
+
 * The following call to [UseKestrel](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderkestrelextensions.usekestrel) overrides the default [Limits.MaxRequestBodySize](/dotnet/api/microsoft.aspnetcore.server.kestrel.core.kestrelserverlimits.maxrequestbodysize) of 30,000,000 bytes established when Kestrel was configured by `CreateDefaultBuilder`:
 
     ```csharp
@@ -82,60 +112,18 @@ The configuration defined by `CreateDefaultBuilder` can be overridden and augmen
         {
             options.Limits.MaxRequestBodySize = 20000000;
         });
-        ...
     ```
 
-The *content root* determines where the host searches for content files, such as MVC view files. When the app is started from the project's root folder, the project's root folder is used as the content root. This is the default used in [Visual Studio](https://www.visualstudio.com/) and the [dotnet new templates](/dotnet/core/tools/dotnet-new).
+::: moniker-end
+
+The [content root](xref:fundamentals/index#content-root) determines where the host searches for content files, such as MVC view files. When the app is started from the project's root folder, the project's root folder is used as the content root. This is the default used in [Visual Studio](https://visualstudio.microsoft.com) and the [dotnet new templates](/dotnet/core/tools/dotnet-new).
 
 For more information on app configuration, see <xref:fundamentals/configuration/index>.
 
 > [!NOTE]
-> As an alternative to using the static `CreateDefaultBuilder` method, creating a host from [WebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilder) is a supported approach with ASP.NET Core 2.x. For more information, see the ASP.NET Core 1.x tab.
+> As an alternative to using the static `CreateDefaultBuilder` method, creating a host from [WebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilder) is a supported approach with ASP.NET Core 2.x.
 
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.0"
-
-Create a host using an instance of [WebHostBuilder](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilder). Creating a host is typically performed in the app's entry point, the `Main` method. In the project templates, `Main` is located in *Program.cs*:
-
-```csharp
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        BuildWebHost(args).Run();
-    }
-
-    public static IWebHost BuildWebHost(string[] args) =>
-        WebHost.CreateDefaultBuilder(args)
-            .UseStartup<Startup>()
-            .Build();
-}
-```
-
-`WebHostBuilder` requires a [server that implements IServer](xref:fundamentals/servers/index). The built-in servers are [Kestrel](xref:fundamentals/servers/kestrel) and [HTTP.sys](xref:fundamentals/servers/httpsys) (prior to the release of ASP.NET Core 2.0, HTTP.sys was called [WebListener](xref:fundamentals/servers/weblistener)). In this example, the [UseKestrel extension method](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderkestrelextensions.usekestrel?view=aspnetcore-1.1) specifies the Kestrel server.
-
-The *content root* determines where the host searches for content files, such as MVC view files. The default content root is obtained for `UseContentRoot` by [Directory.GetCurrentDirectory](/dotnet/api/system.io.directory.getcurrentdirectory?view=netcore-1.1). When the app is started from the project's root folder, the project's root folder is used as the content root. This is the default used in [Visual Studio](https://www.visualstudio.com/) and the [dotnet new templates](/dotnet/core/tools/dotnet-new).
-
-To use IIS as a reverse proxy, call [UseIISIntegration](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderiisextensions) as part of building the host. `UseIISIntegration` doesn't configure a *server*, like [UseKestrel](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderkestrelextensions.usekestrel?view=aspnetcore-1.1) does. `UseIISIntegration` configures the base path and port the server listens on when using the [ASP.NET Core Module](xref:fundamentals/servers/aspnet-core-module) to create a reverse proxy between Kestrel and IIS. To use IIS with ASP.NET Core, `UseKestrel` and `UseIISIntegration` must be specified. `UseIISIntegration` only activates when running behind IIS or IIS Express. For more information, see <xref:fundamentals/servers/aspnet-core-module> and <xref:host-and-deploy/aspnet-core-module>.
-
-A minimal implementation that configures a host (and an ASP.NET Core app) includes specifying a server and configuration of the app's request pipeline:
-
-```csharp
-var host = new WebHostBuilder()
-    .UseKestrel()
-    .Configure(app =>
-    {
-        app.Run(context => context.Response.WriteAsync("Hello World!"));
-    })
-    .Build();
-
-host.Run();
-```
-
-::: moniker-end
-
-When setting up a host, [Configure](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderextensions.configure?view=aspnetcore-1.1) and [ConfigureServices](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilder.configureservices?view=aspnetcore-1.1) methods can be provided. If a `Startup` class is specified, it must define a `Configure` method. For more information, see <xref:fundamentals/startup>. Multiple calls to `ConfigureServices` append to one another. Multiple calls to `Configure` or `UseStartup` on the `WebHostBuilder` replace previous settings.
+When setting up a host, [Configure](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderextensions.configure) and [ConfigureServices](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilder.configureservices) methods can be provided. If a `Startup` class is specified, it must define a `Configure` method. For more information, see <xref:fundamentals/startup>. Multiple calls to `ConfigureServices` append to one another. Multiple calls to `Configure` or `UseStartup` on the `WebHostBuilder` replace previous settings.
 
 ## Host configuration values
 
@@ -149,31 +137,28 @@ The host uses whichever option sets a value last. For more information, see [Ove
 
 ### Application Key (Name)
 
+::: moniker range=">= aspnetcore-3.0"
+
+The `IWebHostEnvironment.ApplicationName` property is automatically set when [UseStartup](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderextensions.usestartup) or [Configure](/dotnet/api/microsoft.aspnetcore.hosting.istartup.configure) is called during host construction. The value is set to the name of the assembly containing the app's entry point. To set the value explicitly, use the [WebHostDefaults.ApplicationKey](/dotnet/api/microsoft.aspnetcore.hosting.webhostdefaults.applicationkey):
+
+::: moniker-end
+
+::: moniker range="< aspnetcore-3.0"
+
 The [IHostingEnvironment.ApplicationName](/dotnet/api/microsoft.extensions.hosting.ihostingenvironment.applicationname) property is automatically set when [UseStartup](/dotnet/api/microsoft.aspnetcore.hosting.webhostbuilderextensions.usestartup) or [Configure](/dotnet/api/microsoft.aspnetcore.hosting.istartup.configure) is called during host construction. The value is set to the name of the assembly containing the app's entry point. To set the value explicitly, use the [WebHostDefaults.ApplicationKey](/dotnet/api/microsoft.aspnetcore.hosting.webhostdefaults.applicationkey):
+
+::: moniker-end
 
 **Key**: applicationName  
 **Type**: *string*  
 **Default**: The name of the assembly containing the app's entry point.  
 **Set using**: `UseSetting`  
-**Environment variable**: `ASPNETCORE_APPLICATIONKEY`
-
-::: moniker range=">= aspnetcore-2.1"
+**Environment variable**: `ASPNETCORE_APPLICATIONNAME`
 
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .UseSetting(WebHostDefaults.ApplicationKey, "CustomApplicationName")
 ```
-
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.1"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseSetting("applicationName", "CustomApplicationName")
-```
-
-::: moniker-end
 
 ### Capture Startup Errors
 
@@ -187,27 +172,14 @@ This setting controls the capture of startup errors.
 
 When `false`, errors during startup result in the host exiting. When `true`, the host captures exceptions during startup and attempts to start the server.
 
-::: moniker range=">= aspnetcore-2.0"
-
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .CaptureStartupErrors(true)
 ```
 
-::: moniker-end
+### Content root
 
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .CaptureStartupErrors(true)
-```
-
-::: moniker-end
-
-### Content Root
-
-This setting determines where ASP.NET Core begins searching for content files, such as MVC views. 
+This setting determines where ASP.NET Core begins searching for content files.
 
 **Key**: contentRoot  
 **Type**: *string*  
@@ -215,25 +187,17 @@ This setting determines where ASP.NET Core begins searching for content files, s
 **Set using**: `UseContentRoot`  
 **Environment variable**: `ASPNETCORE_CONTENTROOT`
 
-The content root is also used as the base path for the [Web Root setting](#web-root). If the path doesn't exist, the host fails to start.
-
-::: moniker range=">= aspnetcore-2.0"
+The content root is also used as the base path for the [web root](xref:fundamentals/index#web-root). If the content root path doesn't exist, the host fails to start.
 
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .UseContentRoot("c:\\<content-root>")
 ```
 
-::: moniker-end
+For more information, see:
 
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseContentRoot("c:\\<content-root>")
-```
-
-::: moniker-end
+* [Fundamentals: Content root](xref:fundamentals/index#content-root)
+* [Web root](#web-root)
 
 ### Detailed Errors
 
@@ -247,23 +211,10 @@ Determines if detailed errors should be captured.
 
 When enabled (or when the <a href="#environment">Environment</a> is set to `Development`), the app captures detailed exceptions.
 
-::: moniker range=">= aspnetcore-2.0"
-
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .UseSetting(WebHostDefaults.DetailedErrorsKey, "true")
 ```
-
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseSetting(WebHostDefaults.DetailedErrorsKey, "true")
-```
-
-::: moniker-end
 
 ### Environment
 
@@ -275,27 +226,12 @@ Sets the app's environment.
 **Set using**: `UseEnvironment`  
 **Environment variable**: `ASPNETCORE_ENVIRONMENT`
 
-The environment can be set to any value. Framework-defined values include `Development`, `Staging`, and `Production`. Values aren't case sensitive. By default, the *Environment* is read from the `ASPNETCORE_ENVIRONMENT` environment variable. When using [Visual Studio](https://www.visualstudio.com/), environment variables may be set in the *launchSettings.json* file. For more information, see <xref:fundamentals/environments>.
-
-::: moniker range=">= aspnetcore-2.0"
+The environment can be set to any value. Framework-defined values include `Development`, `Staging`, and `Production`. Values aren't case sensitive. By default, the *Environment* is read from the `ASPNETCORE_ENVIRONMENT` environment variable. When using [Visual Studio](https://visualstudio.microsoft.com), environment variables may be set in the *launchSettings.json* file. For more information, see <xref:fundamentals/environments>.
 
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .UseEnvironment(EnvironmentName.Development)
 ```
-
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseEnvironment(EnvironmentName.Development)
-```
-
-::: moniker-end
-
-::: moniker range=">= aspnetcore-2.0"
 
 ### Hosting Startup Assemblies
 
@@ -316,10 +252,6 @@ WebHost.CreateDefaultBuilder(args)
     .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "assembly1;assembly2")
 ```
 
-::: moniker-end
-
-::: moniker range=">= aspnetcore-2.1"
-
 ### HTTPS Port
 
 Set the HTTPS redirect port. Used in [enforcing HTTPS](xref:security/enforcing-ssl).
@@ -335,9 +267,20 @@ WebHost.CreateDefaultBuilder(args)
     .UseSetting("https_port", "8080")
 ```
 
-::: moniker-end
+### Hosting Startup Exclude Assemblies
 
-::: moniker range=">= aspnetcore-2.0"
+A semicolon-delimited string of hosting startup assemblies to exclude on startup.
+
+**Key**: hostingStartupExcludeAssemblies  
+**Type**: *string*  
+**Default**: Empty string  
+**Set using**: `UseSetting`  
+**Environment variable**: `ASPNETCORE_HOSTINGSTARTUPEXCLUDEASSEMBLIES`
+
+```csharp
+WebHost.CreateDefaultBuilder(args)
+    .UseSetting(WebHostDefaults.HostingStartupExcludeAssembliesKey, "assembly1;assembly2")
+```
 
 ### Prefer Hosting URLs
 
@@ -354,10 +297,6 @@ WebHost.CreateDefaultBuilder(args)
     .PreferHostingUrls(false)
 ```
 
-::: moniker-end
-
-::: moniker range=">= aspnetcore-2.0"
-
 ### Prevent Hosting Startup
 
 Prevents the automatic loading of hosting startup assemblies, including hosting startup assemblies configured by the app's assembly. For more information, see <xref:fundamentals/configuration/platform-specific-configuration>.
@@ -373,8 +312,6 @@ WebHost.CreateDefaultBuilder(args)
     .UseSetting(WebHostDefaults.PreventHostingStartupKey, "true")
 ```
 
-::: moniker-end
-
 ### Server URLs
 
 Indicates the IP addresses or host addresses with ports and protocols that the server should listen on for requests.
@@ -385,9 +322,7 @@ Indicates the IP addresses or host addresses with ports and protocols that the s
 **Set using**: `UseUrls`  
 **Environment variable**: `ASPNETCORE_URLS`
 
-Set to a semicolon-separated (;) list of URL prefixes to which the server should respond. For example, `http://localhost:123`. Use "\*" to indicate that the server should listen for requests on any IP address or hostname using the specified port and protocol (for example, `http://*:5000`). The protocol (`http://` or `https://`) must be included with each URL. Supported formats vary between servers.
-
-::: moniker range=">= aspnetcore-2.0"
+Set to a semicolon-separated (;) list of URL prefixes to which the server should respond. For example, `http://localhost:123`. Use "\*" to indicate that the server should listen for requests on any IP address or hostname using the specified port and protocol (for example, `http://*:5000`). The protocol (`http://` or `https://`) must be included with each URL. Supported formats vary among servers.
 
 ```csharp
 WebHost.CreateDefaultBuilder(args)
@@ -396,22 +331,9 @@ WebHost.CreateDefaultBuilder(args)
 
 Kestrel has its own endpoint configuration API. For more information, see <xref:fundamentals/servers/kestrel#endpoint-configuration>.
 
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseUrls("http://*:5000;http://localhost:5001;https://hostname:5002")
-```
-
-::: moniker-end
-
-::: moniker range=">= aspnetcore-2.0"
-
 ### Shutdown Timeout
 
-Specifies the amount of time to wait for the web host to shut down.
+Specifies the amount of time to wait for Web Host to shut down.
 
 **Key**: shutdownTimeoutSeconds  
 **Type**: *int*  
@@ -433,8 +355,6 @@ WebHost.CreateDefaultBuilder(args)
     .UseShutdownTimeout(TimeSpan.FromSeconds(10))
 ```
 
-::: moniker-end
-
 ### Startup Assembly
 
 Determines the assembly to search for the `Startup` class.
@@ -447,8 +367,6 @@ Determines the assembly to search for the `Startup` class.
 
 The assembly by name (`string`) or type (`TStartup`) can be referenced. If multiple `UseStartup` methods are called, the last one takes precedence.
 
-::: moniker range=">= aspnetcore-2.0"
-
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .UseStartup("StartupAssemblyName")
@@ -459,55 +377,29 @@ WebHost.CreateDefaultBuilder(args)
     .UseStartup<TStartup>()
 ```
 
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseStartup("StartupAssemblyName")
-```
-
-```csharp
-var host = new WebHostBuilder()
-    .UseStartup<TStartup>()
-```
-
-::: moniker-end
-
-### Web Root
+### Web root
 
 Sets the relative path to the app's static assets.
 
 **Key**: webroot  
 **Type**: *string*  
-**Default**: If not specified, the default is "(Content Root)/wwwroot", if the path exists. If the path doesn't exist, then a no-op file provider is used.  
+**Default**: The default is `wwwroot`. The path to *{content root}/wwwroot* must exist. If the path doesn't exist, a no-op file provider is used.  
 **Set using**: `UseWebRoot`  
 **Environment variable**: `ASPNETCORE_WEBROOT`
-
-::: moniker range=">= aspnetcore-2.0"
 
 ```csharp
 WebHost.CreateDefaultBuilder(args)
     .UseWebRoot("public")
 ```
 
-::: moniker-end
+For more information, see:
 
-::: moniker range="< aspnetcore-2.0"
-
-```csharp
-var host = new WebHostBuilder()
-    .UseWebRoot("public")
-```
-
-::: moniker-end
+* [Fundamentals: Web root](xref:fundamentals/index#web-root)
+* [Content root](#content-root)
 
 ## Override configuration
 
-Use [Configuration](xref:fundamentals/configuration/index) to configure the web host. In the following example, host configuration is optionally specified in a *hostsettings.json* file. Any configuration loaded from the *hostsettings.json* file may be overridden by command-line arguments. The built configuration (in `config`) is used to configure the host with [UseConfiguration](/dotnet/api/microsoft.aspnetcore.hosting.hostingabstractionswebhostbuilderextensions.useconfiguration). `IWebHostBuilder` configuration is added to the app's configuration, but the converse isn't true&mdash;`ConfigureAppConfiguration` doesn't affect the `IWebHostBuilder` configuration.
-
-::: moniker range=">= aspnetcore-2.0"
+Use [Configuration](xref:fundamentals/configuration/index) to configure Web Host. In the following example, host configuration is optionally specified in a *hostsettings.json* file. Any configuration loaded from the *hostsettings.json* file may be overridden by command-line arguments. The built configuration (in `config`) is used to configure the host with [UseConfiguration](/dotnet/api/microsoft.aspnetcore.hosting.hostingabstractionswebhostbuilderextensions.useconfiguration). `IWebHostBuilder` configuration is added to the app's configuration, but the converse isn't true&mdash;`ConfigureAppConfiguration` doesn't affect the `IWebHostBuilder` configuration.
 
 Overriding the configuration provided by `UseUrls` with *hostsettings.json* config first, command-line argument config second:
 
@@ -534,8 +426,7 @@ public class Program
             {
                 app.Run(context => 
                     context.Response.WriteAsync("Hello, World!"));
-            })
-            .Build();
+            });
     }
 }
 ```
@@ -547,64 +438,17 @@ public class Program
     urls: "http://*:5005"
 }
 ```
-
-::: moniker-end
-
-::: moniker range="< aspnetcore-2.0"
-
-Overriding the configuration provided by `UseUrls` with *hostsettings.json* config first, command-line argument config second:
-
-```csharp
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("hostsettings.json", optional: true)
-            .AddCommandLine(args)
-            .Build();
-
-        var host = new WebHostBuilder()
-            .UseUrls("http://*:5000")
-            .UseConfiguration(config)
-            .UseKestrel()
-            .Configure(app =>
-            {
-                app.Run(context => 
-                    context.Response.WriteAsync("Hello, World!"));
-            })
-            .Build();
-
-        host.Run();
-    }
-}
-```
-
-*hostsettings.json*:
-
-```json
-{
-    urls: "http://*:5005"
-}
-```
-
-::: moniker-end
 
 > [!NOTE]
-> The [UseConfiguration](/dotnet/api/microsoft.aspnetcore.hosting.hostingabstractionswebhostbuilderextensions.useconfiguration) extension method isn't currently capable of parsing a configuration section returned by `GetSection` (for example, `.UseConfiguration(Configuration.GetSection("section"))`. The `GetSection` method filters the configuration keys to the section requested but leaves the section name on the keys (for example, `section:urls`, `section:environment`). The `UseConfiguration` method expects the keys to match the `WebHostBuilder` keys (for example, `urls`, `environment`). The presence of the section name on the keys prevents the section's values from configuring the host. This issue will be addressed in an upcoming release. For more information and workarounds, see [Passing configuration section into WebHostBuilder.UseConfiguration uses full keys](https://github.com/aspnet/Hosting/issues/839).
->
-> `UseConfiguration` only copies keys from the provided `IConfiguration` to the host builder configuration. Therefore, setting `reloadOnChange: true` for JSON, INI, and XML settings files has no effect.
+> [UseConfiguration](/dotnet/api/microsoft.aspnetcore.hosting.hostingabstractionswebhostbuilderextensions.useconfiguration) only copies keys from the provided `IConfiguration` to the host builder configuration. Therefore, setting `reloadOnChange: true` for JSON, INI, and XML settings files has no effect.
 
 To specify the host run on a particular URL, the desired value can be passed in from a command prompt when executing [dotnet run](/dotnet/core/tools/dotnet-run). The command-line argument overrides the `urls` value from the *hostsettings.json* file, and the server listens on port 8080:
 
-```console
+```dotnetcli
 dotnet run --urls "http://*:8080"
 ```
 
 ## Manage the host
-
-::: moniker range=">= aspnetcore-2.0"
 
 **Run**
 
@@ -676,7 +520,7 @@ using (var host = WebHost.Start("http://localhost:8080", app => app.Response.Wri
 
 Produces the same result as **Start(RequestDelegate app)**, except the app responds on `http://localhost:8080`.
 
-**Start(Action&lt;IRouteBuilder&gt; routeBuilder)**
+**Start(Action\<IRouteBuilder> routeBuilder)**
 
 Use an instance of `IRouteBuilder` ([Microsoft.AspNetCore.Routing](https://www.nuget.org/packages/Microsoft.AspNetCore.Routing/)) to use routing middleware:
 
@@ -710,7 +554,7 @@ Use the following browser requests with the example:
 
 `WaitForShutdown` blocks until a break (Ctrl-C/SIGINT or SIGTERM) is issued. The app displays the `Console.WriteLine` message and waits for a keypress to exit.
 
-**Start(string url, Action&lt;IRouteBuilder&gt; routeBuilder)**
+**Start(string url, Action\<IRouteBuilder> routeBuilder)**
 
 Use a URL and an instance of `IRouteBuilder`:
 
@@ -731,9 +575,9 @@ using (var host = WebHost.Start("http://localhost:8080", router => router
 }
 ```
 
-Produces the same result as **Start(Action&lt;IRouteBuilder&gt; routeBuilder)**, except the app responds at `http://localhost:8080`.
+Produces the same result as **Start(Action\<IRouteBuilder> routeBuilder)**, except the app responds at `http://localhost:8080`.
 
-**StartWith(Action&lt;IApplicationBuilder&gt; app)**
+**StartWith(Action\<IApplicationBuilder> app)**
 
 Provide a delegate to configure an `IApplicationBuilder`:
 
@@ -754,7 +598,7 @@ using (var host = WebHost.StartWith(app =>
 
 Make a request in the browser to `http://localhost:5000` to receive the response "Hello World!" `WaitForShutdown` blocks until a break (Ctrl-C/SIGINT or SIGTERM) is issued. The app displays the `Console.WriteLine` message and waits for a keypress to exit.
 
-**StartWith(string url, Action&lt;IApplicationBuilder&gt; app)**
+**StartWith(string url, Action\<IApplicationBuilder> app)**
 
 Provide a URL and a delegate to configure an `IApplicationBuilder`:
 
@@ -773,53 +617,104 @@ using (var host = WebHost.StartWith("http://localhost:8080", app =>
 }
 ```
 
-Produces the same result as **StartWith(Action&lt;IApplicationBuilder&gt; app)**, except the app responds on `http://localhost:8080`.
+Produces the same result as **StartWith(Action\<IApplicationBuilder> app)**, except the app responds on `http://localhost:8080`.
 
-::: moniker-end
+::: moniker range=">= aspnetcore-3.0"
 
-::: moniker range="< aspnetcore-2.0"
+## IWebHostEnvironment interface
 
-**Run**
-
-The `Run` method starts the web app and blocks the calling thread until the host is shut down:
+The `IWebHostEnvironment` interface provides information about the app's web hosting environment. Use [constructor injection](xref:fundamentals/dependency-injection) to obtain the `IWebHostEnvironment` in order to use its properties and extension methods:
 
 ```csharp
-host.Run();
-```
-
-**Start**
-
-Run the host in a non-blocking manner by calling its `Start` method:
-
-```csharp
-using (host)
+public class CustomFileReader
 {
-    host.Start();
-    Console.ReadLine();
+    private readonly IWebHostEnvironment _env;
+
+    public CustomFileReader(IWebHostEnvironment env)
+    {
+        _env = env;
+    }
+
+    public string ReadFile(string filePath)
+    {
+        var fileProvider = _env.WebRootFileProvider;
+        // Process the file here
+    }
 }
 ```
 
-If a list of URLs is passed to the `Start` method, it listens on the URLs specified:
+A [convention-based approach](xref:fundamentals/environments#environment-based-startup-class-and-methods) can be used to configure the app at startup based on the environment. Alternatively, inject the `IWebHostEnvironment` into the `Startup` constructor for use in `ConfigureServices`:
 
 ```csharp
-var urls = new List<string>()
+public class Startup
 {
-    "http://*:5000",
-    "http://localhost:5001"
-};
+    public Startup(IWebHostEnvironment env)
+    {
+        HostingEnvironment = env;
+    }
 
-var host = new WebHostBuilder()
-    .UseKestrel()
-    .UseStartup<Startup>()
-    .Start(urls.ToArray());
+    public IWebHostEnvironment HostingEnvironment { get; }
 
-using (host)
+    public void ConfigureServices(IServiceCollection services)
+    {
+        if (HostingEnvironment.IsDevelopment())
+        {
+            // Development configuration
+        }
+        else
+        {
+            // Staging/Production configuration
+        }
+
+        var contentRootPath = HostingEnvironment.ContentRootPath;
+    }
+}
+```
+
+> [!NOTE]
+> In addition to the `IsDevelopment` extension method, `IWebHostEnvironment` offers `IsStaging`, `IsProduction`, and `IsEnvironment(string environmentName)` methods. For more information, see <xref:fundamentals/environments>.
+
+The `IWebHostEnvironment` service can also be injected directly into the `Configure` method for setting up the processing pipeline:
+
+```csharp
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
-    Console.ReadLine();
+    if (env.IsDevelopment())
+    {
+        // In Development, use the Developer Exception Page
+        app.UseDeveloperExceptionPage();
+    }
+    else
+    {
+        // In Staging/Production, route exceptions to /error
+        app.UseExceptionHandler("/error");
+    }
+
+    var contentRootPath = env.ContentRootPath;
+}
+```
+
+`IWebHostEnvironment` can be injected into the `Invoke` method when creating custom [middleware](xref:fundamentals/middleware/write):
+
+```csharp
+public async Task Invoke(HttpContext context, IWebHostEnvironment env)
+{
+    if (env.IsDevelopment())
+    {
+        // Configure middleware for Development
+    }
+    else
+    {
+        // Configure middleware for Staging/Production
+    }
+
+    var contentRootPath = env.ContentRootPath;
 }
 ```
 
 ::: moniker-end
+
+::: moniker range="< aspnetcore-3.0"
 
 ## IHostingEnvironment interface
 
@@ -881,7 +776,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 {
     if (env.IsDevelopment())
     {
-        // In Development, use the developer exception page
+        // In Development, use the Developer Exception Page
         app.UseDeveloperExceptionPage();
     }
     else
@@ -894,7 +789,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 }
 ```
 
-`IHostingEnvironment` can be injected into the `Invoke` method when creating custom [middleware](xref:fundamentals/middleware/index#write-middleware):
+`IHostingEnvironment` can be injected into the `Invoke` method when creating custom [middleware](xref:fundamentals/middleware/write):
 
 ```csharp
 public async Task Invoke(HttpContext context, IHostingEnvironment env)
@@ -911,6 +806,77 @@ public async Task Invoke(HttpContext context, IHostingEnvironment env)
     var contentRootPath = env.ContentRootPath;
 }
 ```
+
+::: moniker-end
+
+::: moniker range=">= aspnetcore-3.0"
+
+## IHostApplicationLifetime interface
+
+`IHostApplicationLifetime` allows for post-startup and shutdown activities. Three properties on the interface are cancellation tokens used to register `Action` methods that define startup and shutdown events.
+
+| Cancellation Token    | Triggered when&#8230; |
+| --------------------- | --------------------- |
+| `ApplicationStarted`  | The host has fully started. |
+| `ApplicationStopped`  | The host is completing a graceful shutdown. All requests should be processed. Shutdown blocks until this event completes. |
+| `ApplicationStopping` | The host is performing a graceful shutdown. Requests may still be processing. Shutdown blocks until this event completes. |
+
+```csharp
+public class Startup
+{
+    public void Configure(IApplicationBuilder app, IHostApplicationLifetime appLifetime)
+    {
+        appLifetime.ApplicationStarted.Register(OnStarted);
+        appLifetime.ApplicationStopping.Register(OnStopping);
+        appLifetime.ApplicationStopped.Register(OnStopped);
+
+        Console.CancelKeyPress += (sender, eventArgs) =>
+        {
+            appLifetime.StopApplication();
+            // Don't terminate the process immediately, wait for the Main thread to exit gracefully.
+            eventArgs.Cancel = true;
+        };
+    }
+
+    private void OnStarted()
+    {
+        // Perform post-startup activities here
+    }
+
+    private void OnStopping()
+    {
+        // Perform on-stopping activities here
+    }
+
+    private void OnStopped()
+    {
+        // Perform post-stopped activities here
+    }
+}
+```
+
+`StopApplication` requests termination of the app. The following class uses `StopApplication` to gracefully shut down an app when the class's `Shutdown` method is called:
+
+```csharp
+public class MyClass
+{
+    private readonly IHostApplicationLifetime _appLifetime;
+
+    public MyClass(IHostApplicationLifetime appLifetime)
+    {
+        _appLifetime = appLifetime;
+    }
+
+    public void Shutdown()
+    {
+        _appLifetime.StopApplication();
+    }
+}
+```
+
+::: moniker-end
+
+::: moniker range="< aspnetcore-3.0"
 
 ## IApplicationLifetime interface
 
@@ -975,13 +941,11 @@ public class MyClass
 }
 ```
 
+::: moniker-end
+
 ## Scope validation
 
-::: moniker range=">= aspnetcore-2.0"
-
 [CreateDefaultBuilder](/dotnet/api/microsoft.aspnetcore.webhost.createdefaultbuilder) sets [ServiceProviderOptions.ValidateScopes](/dotnet/api/microsoft.extensions.dependencyinjection.serviceprovideroptions.validatescopes) to `true` if the app's environment is Development.
-
-::: moniker-end
 
 When `ValidateScopes` is set to `true`, the default service provider performs checks to verify that:
 
@@ -1000,42 +964,6 @@ WebHost.CreateDefaultBuilder(args)
         options.ValidateScopes = true;
     })
 ```
-
-::: moniker range="= aspnetcore-2.0"
-
-## Troubleshooting System.ArgumentException
-
-**The following only applies to ASP.NET Core 2.0 apps when the app doesn't call `UseStartup` or `Configure`.**
-
-A host may be built by injecting `IStartup` directly into the dependency injection container rather than calling `UseStartup` or `Configure`:
-
-```csharp
-services.AddSingleton<IStartup, Startup>();
-```
-
-If the host is built this way, the following error may occur:
-
-```
-Unhandled Exception: System.ArgumentException: A valid non-empty application name must be provided.
-```
-
-This occurs because the app name (the name of the current assembly) is required to scan for `HostingStartupAttributes`. If the app manually injects `IStartup` into the dependency injection container, add the following call to `WebHostBuilder` with the assembly name specified:
-
-```csharp
-WebHost.CreateDefaultBuilder(args)
-    .UseSetting("applicationName", "AssemblyName")
-```
-
-Alternatively, add a dummy `Configure` to the `WebHostBuilder`, which sets the app name automatically:
-
-```csharp
-WebHost.CreateDefaultBuilder(args)
-    .Configure(_ => { })
-```
-
-For more information, see [Announcements: Microsoft.Extensions.PlatformAbstractions has been removed (comment)](https://github.com/aspnet/Announcements/issues/237#issuecomment-323786938) and the [StartupInjection sample](https://github.com/aspnet/Hosting/blob/8377d226f1e6e1a97dabdb6769a845eeccc829ed/samples/SampleStartups/StartupInjection.cs).
-
-::: moniker-end
 
 ## Additional resources
 

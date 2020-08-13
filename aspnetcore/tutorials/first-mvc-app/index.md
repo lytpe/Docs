@@ -1,20 +1,15 @@
 ---
-title: Create a web app with ASP.NET Core MVC on Windows with Visual Studio
+title: Create a web app with ASP.NET Core MVC
 author: rick-anderson
-description: See the table of contents for an introduction to ASP.NET Core MVC using Visual Studio on Windows.
+description: See the table of contents for an introduction to ASP.NET Core MVC.
 ms.author: riande
 ms.date: 10/26/2017
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: tutorials/first-mvc-app/index
 ---
-# Create a web app with ASP.NET Core MVC on Windows with Visual Studio
+# Create a web app with ASP.NET Core MVC
 
 [!INCLUDE [consider RP](~/includes/razor.md)]
-
-There are 3 versions of this tutorial:
-
-* Windows: This series
-* macOS: [Create an ASP.NET Core MVC app with Visual Studio for Mac](xref:tutorials/first-mvc-app-mac/start-mvc)
-* macOS, Linux, and Windows: [Create an ASP.NET Core MVC app with Visual Studio Code](xref:tutorials/first-mvc-app-xplat/start-mvc)
 
 The tutorial series includes the following:
 

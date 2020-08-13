@@ -1,6 +1,8 @@
 ﻿#define DefaultBuilder
-// or any of: Limits TCPSocket UnixSocket FileDescriptor Port0
-// TCPSocket UnixSocket FileDescriptor Limits require a PFX X.509 certificate
+// Define any of the following for the scenarios described in the Kestrel topic:
+// DefaultBuilder Limits TCPSocket UnixSocket FileDescriptor Port0 SyncIO
+// The following require an X.509 certificate:
+// TCPSocket UnixSocket FileDescriptor Limits
 
 using System;
 using System.Net;
@@ -38,10 +40,10 @@ namespace KestrelSample
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseKestrel(options =>
+                .ConfigureKestrel((context, serverOptions) =>
                 {
-                    options.Listen(IPAddress.Loopback, 8000);
-                    options.Listen(IPAddress.Loopback, 8001, listenOptions =>
+                    serverOptions.Listen(IPAddress.Loopback, 5000);
+                    serverOptions.Listen(IPAddress.Loopback, 5001, listenOptions =>
                     {
                         listenOptions.UseHttps("testCert.pfx", "testPassword");
                     });
@@ -57,10 +59,10 @@ namespace KestrelSample
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 #region snippet_UnixSocket
-                .UseKestrel(options =>
+                .ConfigureKestrel((context, serverOptions) =>
                 {
-                    options.ListenUnixSocket("/tmp/kestrel-test.sock");
-                    options.ListenUnixSocket("/tmp/kestrel-test.sock", listenOptions =>
+                    serverOptions.ListenUnixSocket("/tmp/kestrel-test.sock");
+                    serverOptions.ListenUnixSocket("/tmp/kestrel-test.sock", listenOptions =>
                     {
                         listenOptions.UseHttps("testCert.pfx", "testpassword");
                     });
@@ -74,15 +76,16 @@ namespace KestrelSample
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseLibuv()
                 .UseStartup<Startup>()
                 #region snippet_FileDescriptor
-                .UseKestrel(options =>
+                .ConfigureKestrel((context, serverOptions) =>
                 {
                     var fds = Environment.GetEnvironmentVariable("SD_LISTEN_FDS_START");
-                    ulong fd = ulong.Parse(fds);
+                    var fd = ulong.Parse(fds);
 
-                    options.ListenHandle(fd);
-                    options.ListenHandle(fd, listenOptions =>
+                    serverOptions.ListenHandle(fd);
+                    serverOptions.ListenHandle(fd, listenOptions =>
                     {
                         listenOptions.UseHttps("testCert.pfx", "testpassword");
                     });
@@ -98,20 +101,22 @@ namespace KestrelSample
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 #region snippet_Limits
-                .UseKestrel(options =>
+                .ConfigureKestrel((context, serverOptions) =>
                 {
-                    options.Limits.MaxConcurrentConnections = 100;
-                    options.Limits.MaxConcurrentUpgradedConnections = 100;
-                    options.Limits.MaxRequestBodySize = 10 * 1024;
-                    options.Limits.MinRequestBodyDataRate =
+                    serverOptions.Limits.MaxConcurrentConnections = 100;
+                    serverOptions.Limits.MaxConcurrentUpgradedConnections = 100;
+                    serverOptions.Limits.MaxRequestBodySize = 10 * 1024;
+                    serverOptions.Limits.MinRequestBodyDataRate =
                         new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
-                    options.Limits.MinResponseDataRate =
+                    serverOptions.Limits.MinResponseDataRate =
                         new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
-                    options.Listen(IPAddress.Loopback, 5000);
-                    options.Listen(IPAddress.Loopback, 5001, listenOptions =>
+                    serverOptions.Listen(IPAddress.Loopback, 5000);
+                    serverOptions.Listen(IPAddress.Loopback, 5001, listenOptions =>
                     {
                         listenOptions.UseHttps("testCert.pfx", "testPassword");
                     });
+                    serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+                    serverOptions.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(1);
                 });
                 #endregion
 #elif Port0
@@ -124,9 +129,24 @@ namespace KestrelSample
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 #region snippet_Port0
-                .UseKestrel(options =>
+                .ConfigureKestrel((context, serverOptions) =>
                 {
-                    options.Listen(IPAddress.Loopback, 0);
+                    serverOptions.Listen(IPAddress.Loopback, 0);
+                });
+                #endregion
+#elif SyncIO
+        public static void Main(string[] args)
+        {
+            CreateWebHostBuilder(args).Build().Run();
+        }
+
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                #region snippet_SyncIO
+                .ConfigureKestrel((context, serverOptions) =>
+                {
+                    serverOptions.AllowSynchronousIO = true;
                 });
                 #endregion
 #endif

@@ -1,21 +1,16 @@
 ---
-title: ASP.NET Core MVC with EF Core - Update Related Data - 7 of 10
+title: "Tutorial: Update related data - ASP.NET MVC with EF Core"
+description: "In this tutorial you'll update related data by updating foreign key fields and navigation properties."
 author: rick-anderson
-description: In this tutorial you'll update related data by updating foreign key fields and navigation properties.
-ms.author: tdykstra
-ms.date: 03/15/2017
+ms.author: riande
+ms.custom: mvc
+ms.date: 03/27/2019
+ms.topic: tutorial
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: data/ef-mvc/update-related-data
 ---
 
-# ASP.NET Core MVC with EF Core - Update Related Data - 7 of 10
-
-[!INCLUDE [RP better than MVC](~/includes/RP-EF/rp-over-mvc-21.md)]
-
-::: moniker range="= aspnetcore-2.0"
-
-By [Tom Dykstra](https://github.com/tdykstra) and [Rick Anderson](https://twitter.com/RickAndMSFT)
-
-The Contoso University sample web application demonstrates how to create ASP.NET Core MVC web applications using Entity Framework Core and Visual Studio. For information about the tutorial series, see [the first tutorial in the series](intro.md).
+# Tutorial: Update related data - ASP.NET MVC with EF Core
 
 In the previous tutorial you displayed related data; in this tutorial you'll update related data by updating foreign key fields and navigation properties.
 
@@ -25,7 +20,20 @@ The following illustrations show some of the pages that you'll work with.
 
 ![Instructor Edit page](update-related-data/_static/instructor-edit-courses.png)
 
-## Customize the Create and Edit Pages for Courses
+In this tutorial, you:
+
+> [!div class="checklist"]
+> * Customize Courses pages
+> * Add Instructors Edit page
+> * Add courses to Edit page
+> * Update Delete page
+> * Add office location and courses to Create page
+
+## Prerequisites
+
+* [Read related data](read-related-data.md)
+
+## Customize Courses pages
 
 When a new course entity is created, it must have a relationship to an existing department. To facilitate this, the scaffolded code includes controller methods and Create and Edit views that include a drop-down list for selecting the department. The drop-down list sets the `Course.DepartmentID` foreign key property, and that's all the Entity Framework needs in order to load the `Department` navigation property with the appropriate Department entity. You'll use the scaffolded code, but change it slightly to add error handling and sort the drop-down list.
 
@@ -67,19 +75,19 @@ To optimize performance of the Course Details and Delete pages, add `AsNoTrackin
 
 In *Views/Courses/Create.cshtml*, add a "Select Department" option to the **Department** drop-down list, change the caption from **DepartmentID** to **Department**, and add a validation message.
 
-[!code-html[](intro/samples/cu/Views/Courses/Create.cshtml?highlight=2-6&range=29-34)]
+[!code-cshtml[](intro/samples/cu/Views/Courses/Create.cshtml?highlight=2-6&range=29-34)]
 
 In *Views/Courses/Edit.cshtml*, make the same change for the Department field that you just did in *Create.cshtml*.
 
 Also in *Views/Courses/Edit.cshtml*, add a course number field before the **Title** field. Because the course number is the primary key, it's displayed, but it can't be changed.
 
-[!code-html[](intro/samples/cu/Views/Courses/Edit.cshtml?range=15-18)]
+[!code-cshtml[](intro/samples/cu/Views/Courses/Edit.cshtml?range=15-18)]
 
 There's already a hidden field (`<input type="hidden">`) for the course number in the Edit view. Adding a `<label>` tag helper doesn't eliminate the need for the hidden field because it doesn't cause the course number to be included in the posted data when the user clicks **Save** on the **Edit** page.
 
 In *Views/Courses/Delete.cshtml*, add a course number field at the top and change department ID to department name.
 
-[!code-html[](intro/samples/cu/Views/Courses/Delete.cshtml?highlight=14-19,36)]
+[!code-cshtml[](intro/samples/cu/Views/Courses/Delete.cshtml?highlight=14-19,36)]
 
 In *Views/Courses/Details.cshtml*, make the same change that you just did for *Delete.cshtml*.
 
@@ -97,7 +105,7 @@ Click **Edit** on a course in the Courses Index page.
 
 Change data on the page and click **Save**. The Courses Index page is displayed with the updated course data.
 
-## Add an Edit Page for Instructors
+## Add Instructors Edit page
 
 When you edit an instructor record, you want to be able to update the instructor's office assignment. The Instructor entity has a one-to-zero-or-one relationship with the OfficeAssignment entity, which means your code has to handle the following situations:
 
@@ -111,7 +119,7 @@ When you edit an instructor record, you want to be able to update the instructor
 
 In *InstructorsController.cs*, change the code in the HttpGet `Edit` method so that it loads the Instructor entity's `OfficeAssignment` navigation property and calls `AsNoTracking`:
 
-[!code-csharp[](intro/samples/cu/Controllers/InstructorsController.cs?highlight=9,10&name=snippet_EditGetOA)]
+[!code-csharp[](intro/samples/cu/Controllers/InstructorsController.cs?highlight=8-11&name=snippet_EditGetOA)]
 
 Replace the HttpPost `Edit` method with the following code to handle office assignment updates:
 
@@ -119,11 +127,11 @@ Replace the HttpPost `Edit` method with the following code to handle office assi
 
 The code does the following:
 
--  Changes the method name to `EditPost` because the signature is now the same as the HttpGet `Edit` method (the `ActionName` attribute specifies that the `/Edit/` URL is still used).
+* Changes the method name to `EditPost` because the signature is now the same as the HttpGet `Edit` method (the `ActionName` attribute specifies that the `/Edit/` URL is still used).
 
--  Gets the current Instructor entity from the database using eager loading for the `OfficeAssignment` navigation property. This is the same as what you did in the HttpGet `Edit` method.
+* Gets the current Instructor entity from the database using eager loading for the `OfficeAssignment` navigation property. This is the same as what you did in the HttpGet `Edit` method.
 
--  Updates the retrieved Instructor entity with values from the model binder. The `TryUpdateModel` overload enables you to whitelist the properties you want to include. This prevents over-posting, as explained in the [second tutorial](crud.md).
+* Updates the retrieved Instructor entity with values from the model binder. The `TryUpdateModel` overload enables you to declare the properties you want to include. This prevents over-posting, as explained in the [second tutorial](crud.md).
 
     <!-- Snippets don't play well with <ul> [!code-csharp[](intro/samples/cu/Controllers/InstructorsController.cs?range=241-244)] -->
 
@@ -132,9 +140,9 @@ The code does the following:
         instructorToUpdate,
         "",
         i => i.FirstMidName, i => i.LastName, i => i.HireDate, i => i.OfficeAssignment))
-	```
+    ```
 
--   If the office location is blank, sets the Instructor.OfficeAssignment property to null so that the related row in the OfficeAssignment table will be deleted.
+* If the office location is blank, sets the Instructor.OfficeAssignment property to null so that the related row in the OfficeAssignment table will be deleted.
 
     <!-- Snippets don't play well with <ul>  "intro/samples/cu/Controllers/InstructorsController.cs"} -->
 
@@ -145,19 +153,19 @@ The code does the following:
     }
     ```
 
-- Saves the changes to the database.
+* Saves the changes to the database.
 
 ### Update the Instructor Edit view
 
 In *Views/Instructors/Edit.cshtml*, add a new field for editing the office location, at the end before the **Save** button:
 
-[!code-html[](intro/samples/cu/Views/Instructors/Edit.cshtml?range=30-34)]
+[!code-cshtml[](intro/samples/cu/Views/Instructors/Edit.cshtml?range=30-34)]
 
 Run the app, select the **Instructors** tab, and then click **Edit** on an instructor. Change the **Office Location** and click **Save**.
 
 ![Instructor Edit page](update-related-data/_static/instructor-edit-office.png)
 
-## Add Course assignments to the Instructor Edit page
+## Add courses to Edit page
 
 Instructors may teach any number of courses. Now you'll enhance the Instructor Edit page by adding the ability to change course assignments using a group of check boxes, as shown in the following screen shot:
 
@@ -191,7 +199,7 @@ Next, add the code that's executed when the user clicks **Save**. Replace the `E
 
 The method signature is now different from the HttpGet `Edit` method, so the method name changes from `EditPost` back to `Edit`.
 
-Since the view doesn't have a collection of Course entities, the model binder can't automatically update the `CourseAssignments` navigation property. Instead of using the model binder to update the `CourseAssignments` navigation property, you do that in the new `UpdateInstructorCourses` method. Therefore you need to exclude the `CourseAssignments` property from model binding. This doesn't require any change to the code that calls `TryUpdateModel` because you're using the whitelisting overload and `CourseAssignments` isn't in the include list.
+Since the view doesn't have a collection of Course entities, the model binder can't automatically update the `CourseAssignments` navigation property. Instead of using the model binder to update the `CourseAssignments` navigation property, you do that in the new `UpdateInstructorCourses` method. Therefore, you need to exclude the `CourseAssignments` property from model binding. This doesn't require any change to the code that calls `TryUpdateModel` because you're using the overload that requires explicit approval and `CourseAssignments` isn't in the include list.
 
 If no check boxes were selected, the code in `UpdateInstructorCourses` initializes the `CourseAssignments` navigation property with an empty collection and returns:
 
@@ -213,9 +221,9 @@ In *Views/Instructors/Edit.cshtml*, add a **Courses** field with an array of che
 
 <a id="notepad"></a>
 > [!NOTE]
-> When you paste the code in Visual Studio, line breaks will be changed in a way that breaks the code.  Press Ctrl+Z one time to undo the automatic formatting.  This will fix the line breaks so that they look like what you see here. The indentation doesn't have to be perfect, but the `@</tr><tr>`, `@:<td>`, `@:</td>`, and `@:</tr>` lines must each be on a single line as shown or you'll get a runtime error. With the block of new code selected, press Tab three times to line up the new code with the existing code. You can check the status of this problem [here](https://developercommunity.visualstudio.com/content/problem/147795/razor-editor-malforms-pasted-markup-and-creates-in.html).
+> When you paste the code in Visual Studio, line breaks might be changed in a way that breaks the code. If the code looks different after pasting, press Ctrl+Z one time to undo the automatic formatting. This will fix the line breaks so that they look like what you see here. The indentation doesn't have to be perfect, but the `@:</tr><tr>`, `@:<td>`, `@:</td>`, and `@:</tr>` lines must each be on a single line as shown or you'll get a runtime error. With the block of new code selected, press Tab three times to line up the new code with the existing code. This problem is fixed in Visual Studio 2019.
 
-[!code-html[](intro/samples/cu/Views/Instructors/Edit.cshtml?range=35-61)]
+[!code-cshtml[](intro/samples/cu/Views/Instructors/Edit.cshtml?range=35-61)]
 
 This code creates an HTML table that has three columns. In each column is a check box followed by a caption that consists of the course number and title. The check boxes all have the same name ("selectedCourses"), which informs the model binder that they're to be treated as a group. The value attribute of each check box is set to the value of `CourseID`. When the page is posted, the model binder passes an array to the controller that consists of the `CourseID` values for only the check boxes which are selected.
 
@@ -230,7 +238,7 @@ Change some course assignments and click Save. The changes you make are reflecte
 > [!NOTE]
 > The approach taken here to edit instructor course data works well when there's a limited number of courses. For collections that are much larger, a different UI and a different updating method would be required.
 
-## Update the Delete page
+## Update Delete page
 
 In *InstructorsController.cs*, delete the `DeleteConfirmed` method and insert the following code in its place.
 
@@ -238,11 +246,11 @@ In *InstructorsController.cs*, delete the `DeleteConfirmed` method and insert th
 
 This code makes the following changes:
 
-* Does eager loading for the `CourseAssignments` navigation property.  You have to include this or EF won't know about related `CourseAssignment` entities and won't delete them.  To avoid needing to read them here you could configure cascade delete in the database.
+* Does eager loading for the `CourseAssignments` navigation property. You have to include this or EF won't know about related `CourseAssignment` entities and won't delete them. To avoid needing to read them here you could configure cascade delete in the database.
 
 * If the instructor to be deleted is assigned as administrator of any departments, removes the instructor assignment from those departments.
 
-## Add office location and courses to the Create page
+## Add office location and courses to Create page
 
 In *InstructorsController.cs*, delete the HttpGet and HttpPost `Create` methods, and then add the following code in their place:
 
@@ -279,20 +287,30 @@ If you modify the `CourseAssignments` property in this way, you can remove the e
 
 In *Views/Instructor/Create.cshtml*, add an office location text box and check boxes for courses before the Submit button. As in the case of the Edit page, [fix the formatting if Visual Studio reformats the code when you paste it](#notepad).
 
-[!code-html[](intro/samples/cu/Views/Instructors/Create.cshtml?range=29-61)]
+[!code-cshtml[](intro/samples/cu/Views/Instructors/Create.cshtml?range=29-61)]
 
 Test by running the app and creating an instructor.
 
 ## Handling Transactions
 
-As explained in the [CRUD tutorial](crud.md), the Entity Framework implicitly implements transactions. For scenarios where you need more control -- for example, if you want to include operations done outside of Entity Framework in a transaction -- see [Transactions](https://docs.microsoft.com/ef/core/saving/transactions).
+As explained in the [CRUD tutorial](crud.md), the Entity Framework implicitly implements transactions. For scenarios where you need more control -- for example, if you want to include operations done outside of Entity Framework in a transaction -- see [Transactions](/ef/core/saving/transactions).
 
-## Summary
+## Get the code
 
-You have now completed the introduction to working with related data. In the next tutorial you'll see how to handle concurrency conflicts.
+[Download or view the completed application.](https://github.com/dotnet/AspNetCore.Docs/tree/master/aspnetcore/data/ef-mvc/intro/samples/cu-final)
 
-::: moniker-end
+## Next steps
 
-> [!div class="step-by-step"]
-> [Previous](read-related-data.md)
-> [Next](concurrency.md)
+In this tutorial, you:
+
+> [!div class="checklist"]
+> * Customized Courses pages
+> * Added Instructors Edit page
+> * Added courses to Edit page
+> * Updated Delete page
+> * Added office location and courses to Create page
+
+Advance to the next tutorial to learn how to handle concurrency conflicts.
+
+> [!div class="nextstepaction"]
+> [Handle concurrency conflicts](concurrency.md)

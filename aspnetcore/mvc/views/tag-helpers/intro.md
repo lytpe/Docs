@@ -1,20 +1,21 @@
 ---
 title: Tag Helpers in ASP.NET Core
 author: rick-anderson
-description: Learn what tag helpers are and how to use them in ASP.NET Core.
+description: Learn what Tag Helpers are and how to use them in ASP.NET Core.
 ms.author: riande
 ms.custom: H1Hack27Feb2017
-ms.date: 2/14/2018
+ms.date: 03/18/2019
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: mvc/views/tag-helpers/intro
 ---
 # Tag Helpers in ASP.NET Core
 
 By [Rick Anderson](https://twitter.com/RickAndMSFT)
 
-## What are Tag Helpers?
+## What are Tag Helpers
 
 Tag Helpers enable server-side code to participate in creating and rendering HTML elements in Razor files. For example, the built-in `ImageTagHelper` can append a version number to the image name. Whenever the image changes, the server generates a new unique version for the image, so clients are guaranteed to get the current image (instead of a stale cached image). There are many built-in Tag Helpers for common tasks - such as creating forms, links, loading assets and more - and even more available in public GitHub repositories and as NuGet packages. Tag Helpers are authored in C#, and they target HTML elements based on element name, attribute name, or parent tag. For example, the built-in `LabelTagHelper` can target the HTML `<label>` element when the
-`LabelTagHelper` attributes are applied. If you're familiar with [HTML Helpers](http://stephenwalther.com/archive/2009/03/03/chapter-6-understanding-html-helpers), Tag Helpers reduce the explicit transitions between HTML and C# in Razor views. In many cases, HTML Helpers provide an alternative approach to a specific Tag Helper, but it's important to recognize that Tag Helpers don't replace HTML Helpers and there's not a Tag Helper for each HTML Helper. [Tag Helpers compared to HTML Helpers](#tag-helpers-compared-to-html-helpers) explains the differences in more detail.
+`LabelTagHelper` attributes are applied. If you're familiar with [HTML Helpers](https://stephenwalther.com/archive/2009/03/03/chapter-6-understanding-html-helpers), Tag Helpers reduce the explicit transitions between HTML and C# in Razor views. In many cases, HTML Helpers provide an alternative approach to a specific Tag Helper, but it's important to recognize that Tag Helpers don't replace HTML Helpers and there's not a Tag Helper for each HTML Helper. [Tag Helpers compared to HTML Helpers](#tag-helpers-compared-to-html-helpers) explains the differences in more detail.
 
 ## What Tag Helpers provide
 
@@ -66,7 +67,7 @@ If you create a new ASP.NET Core web app named *AuthoringTagHelpers*, the follow
 
 [!code-cshtml[](../../../mvc/views/tag-helpers/authoring/sample/AuthoringTagHelpers/src/AuthoringTagHelpers/Views/_ViewImportsCopy.cshtml?highlight=2&range=2-3)]
 
-The `@addTagHelper` directive makes Tag Helpers available to the view. In this case, the view file is *Pages/_ViewImports.cshtml*, which by default is inherited by all files in the *Pages* folder and sub-folders; making Tag Helpers available. The code above uses the wildcard syntax ("\*") to specify that all Tag Helpers in the specified assembly (*Microsoft.AspNetCore.Mvc.TagHelpers*) will be available to every view file in the *Views* directory or sub-directory. The first parameter after `@addTagHelper` specifies the Tag Helpers to load (we are using "\*" for all Tag Helpers), and the second parameter "Microsoft.AspNetCore.Mvc.TagHelpers" specifies the assembly containing the Tag Helpers. *Microsoft.AspNetCore.Mvc.TagHelpers* is the assembly for the built-in ASP.NET Core Tag Helpers.
+The `@addTagHelper` directive makes Tag Helpers available to the view. In this case, the view file is *Pages/_ViewImports.cshtml*, which by default is inherited by all files in the *Pages* folder and subfolders; making Tag Helpers available. The code above uses the wildcard syntax ("\*") to specify that all Tag Helpers in the specified assembly (*Microsoft.AspNetCore.Mvc.TagHelpers*) will be available to every view file in the *Views* directory or subdirectory. The first parameter after `@addTagHelper` specifies the Tag Helpers to load (we are using "\*" for all Tag Helpers), and the second parameter "Microsoft.AspNetCore.Mvc.TagHelpers" specifies the assembly containing the Tag Helpers. *Microsoft.AspNetCore.Mvc.TagHelpers* is the assembly for the built-in ASP.NET Core Tag Helpers.
 
 To expose all of the Tag Helpers in this project (which creates an assembly named *AuthoringTagHelpers*), you would use the following:
 
@@ -87,7 +88,7 @@ To add a Tag Helper to a view using an FQN, you first add the FQN (`AuthoringTag
 @addTagHelper AuthoringTagHelpers.TagHelpers.Email*, AuthoringTagHelpers
 ```
 
-As mentioned previously, adding the `@addTagHelper` directive to the *Views/_ViewImports.cshtml* file makes the Tag Helper available to all view files in the *Views* directory and sub-directories. You can use the `@addTagHelper` directive in specific view files if you want to opt-in to exposing the Tag Helper to only those views.
+As mentioned previously, adding the `@addTagHelper` directive to the *Views/_ViewImports.cshtml* file makes the Tag Helper available to all view files in the *Views* directory and subdirectories. You can use the `@addTagHelper` directive in specific view files if you want to opt-in to exposing the Tag Helper to only those views.
 
 <a name="remove-razor-directives-label"></a>
 
@@ -120,11 +121,32 @@ The `@tagHelperPrefix` directive allows you to specify a tag prefix string to en
 ```cshtml
 @tagHelperPrefix th:
 ```
+
 In the code image below, the Tag Helper prefix is set to `th:`, so only those elements using the prefix `th:` support Tag Helpers (Tag Helper-enabled elements have a distinctive font). The `<label>` and `<input>` elements have the Tag Helper prefix and are Tag Helper-enabled, while the `<span>` element doesn't.
 
 ![image](intro/_static/thp.png)
 
 The same hierarchy rules that apply to `@addTagHelper` also apply to `@tagHelperPrefix`.
+
+## Self-closing Tag Helpers
+
+Many Tag Helpers can't be used as self-closing tags. Some Tag Helpers are designed to be self-closing tags. Using a Tag Helper that was not designed to be self-closing suppresses the rendered output. Self-closing a Tag Helper results in a self-closing tag in the rendered output. For more information, see [this note](xref:mvc/views/tag-helpers/authoring#self-closing) in [Authoring Tag Helpers](xref:mvc/views/tag-helpers/authoring).
+
+## C# in Tag Helpers attribute/declaration 
+
+Tag Helpers do not allow C# in the element's attribute or tag declaration area. For example, the following code is not valid:
+
+```cshtml
+<input asp-for="LastName"  
+       @(Model?.LicenseId == null ? "disabled" : string.Empty) />
+```
+
+The preceding code can be written as:
+
+```cshtml
+<input asp-for="LastName" 
+       disabled="@(Model?.LicenseId == null)" />
+```
 
 ## IntelliSense support for Tag Helpers
 
@@ -168,7 +190,7 @@ IntelliSense lists the properties and methods available to the model on the page
 
 ## Tag Helpers compared to HTML Helpers
 
-Tag Helpers attach to HTML elements in Razor views, while [HTML Helpers](http://stephenwalther.com/archive/2009/03/03/chapter-6-understanding-html-helpers) are invoked as methods interspersed with HTML in Razor views. Consider the following Razor markup, which creates an HTML label with the CSS class "caption":
+Tag Helpers attach to HTML elements in Razor views, while [HTML Helpers](https://stephenwalther.com/archive/2009/03/03/chapter-6-understanding-html-helpers) are invoked as methods interspersed with HTML in Razor views. Consider the following Razor markup, which creates an HTML label with the CSS class "caption":
 
 ```cshtml
 @Html.Label("FirstName", "First Name:", new {@class="caption"})
@@ -180,37 +202,21 @@ The at (`@`) symbol tells Razor this is the start of code. The next two paramete
 new {@class="caption"}
 ```
 
-Is an anonymous object used to represent attributes. Because <strong>class</strong> is a reserved keyword in C#, you use the `@` symbol to force C# to interpret "@class=" as a symbol (property name). To a front-end designer (someone familiar with HTML/CSS/JavaScript and other client technologies but not familiar with C# and Razor), most of the line is foreign. The entire line must be authored with no help from IntelliSense.
+Is an anonymous object used to represent attributes. Because `class` is a reserved keyword in C#, you use the `@` symbol to force C# to interpret `@class=` as a symbol (property name). To a front-end designer (someone familiar with HTML/CSS/JavaScript and other client technologies but not familiar with C# and Razor), most of the line is foreign. The entire line must be authored with no help from IntelliSense.
 
 Using the `LabelTagHelper`, the same markup can be written as:
 
-![image](intro/_static/label2.png)
+```cshtml
+<label class="caption" asp-for="FirstName"></label>
+```
 
 With the Tag Helper version, as soon as you enter `<l` in the Visual Studio editor, IntelliSense displays matching elements:
 
 ![image](intro/_static/label.png)
 
-IntelliSense helps you write the entire line. The `LabelTagHelper` also defaults to setting the content of the `asp-for` attribute value ("FirstName") to "First Name"; It converts camel-cased properties to a sentence composed of the property name with a space where each new upper-case letter occurs. In the following markup:
+IntelliSense helps you write the entire line.
 
-![image](intro/_static/label2.png)
-
-generates:
-
-```cshtml
-<label class="caption" for="FirstName">First Name</label>
-```
-
-The camel-cased to sentence-cased content isn't used if you add content to the `<label>`. For example:
-
-![image](intro/_static/1stName.png)
-
-generates:
-
-```cshtml
-<label class="caption" for="FirstName">Name First</label>
-```
-
-The following code image shows the Form portion of the *Views/Account/Register.cshtml* Razor view generated from the legacy ASP.NET 4.5.x MVC template included with Visual Studio 2015.
+The following code image shows the Form portion of the *Views/Account/Register.cshtml* Razor view generated from the ASP.NET 4.5.x MVC template included with Visual Studio.
 
 ![image](intro/_static/regCS.png)
 
@@ -228,7 +234,7 @@ The markup is much cleaner and easier to read, edit, and maintain than the HTML 
 
 Consider the *Email* group:
 
-[!code-csharp[](intro/sample/Register.cshtml?range=12-18)]
+[!code-cshtml[](intro/sample/Register.cshtml?range=12-18)]
 
 Each of the "asp-" attributes has a value of "Email", but "Email" isn't a string. In this context, "Email" is the C# model expression property for the `RegisterViewModel`.
 
@@ -258,8 +264,10 @@ You can customize the font and colorization from **Tools** > **Options** > **Env
 
 ![image](intro/_static/fontoptions2.png)
 
+[!INCLUDE[](~/includes/built-in-TH.md)]
+
 ## Additional resources
 
 * [Author Tag Helpers](xref:mvc/views/tag-helpers/authoring)
-* [Working with Forms ](xref:mvc/views/working-with-forms)
-* [TagHelperSamples on GitHub](https://github.com/dpaquette/TagHelperSamples) contains Tag Helper samples for working with [Bootstrap](http://getbootstrap.com/).
+* [Working with Forms](xref:mvc/views/working-with-forms)
+* [TagHelperSamples on GitHub](https://github.com/dpaquette/TagHelperSamples) contains Tag Helper samples for working with [Bootstrap](https://getbootstrap.com/).

@@ -3,7 +3,8 @@ title: Overview of ASP.NET Core MVC
 author: ardalis
 description: Learn how ASP.NET Core MVC is a rich framework for building web apps and APIs using the Model-View-Controller design pattern.
 ms.author: riande
-ms.date: 01/08/2018
+ms.date: 02/12/2020
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: mvc/overview
 ---
 # Overview of ASP.NET Core MVC
@@ -14,13 +15,13 @@ ASP.NET Core MVC is a rich framework for building web apps and APIs using the Mo
 
 ## What is the MVC pattern?
 
-The Model-View-Controller (MVC) architectural pattern separates an application into three main groups of components: Models, Views, and Controllers. This pattern helps to achieve [separation of concerns](http://deviq.com/separation-of-concerns/). Using this pattern, user requests are routed to a Controller which is responsible for working with the Model to perform user actions and/or retrieve results of queries. The Controller chooses the View to display to the user, and provides it with any Model data it requires.
+The Model-View-Controller (MVC) architectural pattern separates an application into three main groups of components: Models, Views, and Controllers. This pattern helps to achieve [separation of concerns](/dotnet/standard/modern-web-apps-azure-architecture/architectural-principles#separation-of-concerns). Using this pattern, user requests are routed to a Controller which is responsible for working with the Model to perform user actions and/or retrieve results of queries. The Controller chooses the View to display to the user, and provides it with any Model data it requires.
 
 The following diagram shows the three main components and which ones reference the others:
 
 ![MVC Pattern](overview/_static/mvc.png)
 
-This delineation of responsibilities helps you scale the application in terms of complexity because it's easier to code, debug, and test something (model, view, or controller) that has a single job (and follows the [Single Responsibility Principle](http://deviq.com/single-responsibility-principle/)). It's more difficult to update, test, and debug code that has dependencies spread across two or more of these three areas. For example, user interface logic tends to change more frequently than business logic. If presentation code and business logic are combined in a single object, an object containing business logic must be modified every time the user interface is changed. This often introduces errors and requires the retesting of business logic after every minimal user interface change.
+This delineation of responsibilities helps you scale the application in terms of complexity because it's easier to code, debug, and test something (model, view, or controller) that has a single job. It's more difficult to update, test, and debug code that has dependencies spread across two or more of these three areas. For example, user interface logic tends to change more frequently than business logic. If presentation code and business logic are combined in a single object, an object containing business logic must be modified every time the user interface is changed. This often introduces errors and requires the retesting of business logic after every minimal user interface change.
 
 > [!NOTE]
 > Both the view and the controller depend on the model. However, the model depends on neither the view nor the controller. This is one of the key benefits of the separation. This separation allows the model to be built and tested independent of the visual presentation.
@@ -28,9 +29,6 @@ This delineation of responsibilities helps you scale the application in terms of
 ### Model Responsibilities
 
 The Model in an MVC application represents the state of the application and any business logic or operations that should be performed by it. Business logic should be encapsulated in the model, along with any implementation logic for persisting the state of the application. Strongly-typed views typically use ViewModel types designed to contain the data to display on that view. The controller creates and populates these ViewModel instances from the model.
-
-> [!NOTE]
-> There are many ways to organize the model in an app that uses the MVC architectural pattern. Learn more about some [different kinds of model types](http://deviq.com/kinds-of-models/).
 
 ### View Responsibilities
 
@@ -41,10 +39,10 @@ Views are responsible for presenting content through the user interface. They us
 Controllers are the components that handle user interaction, work with the model, and ultimately select a view to render. In an MVC application, the view only displays information; the controller handles and responds to user input and interaction. In the MVC pattern, the controller is the initial entry point, and is responsible for selecting which model types to work with and which view to render (hence its name - it controls how the app responds to a given request).
 
 > [!NOTE]
-> Controllers shouldn't be overly complicated by too many responsibilities. To keep controller logic from becoming overly complex, use the [Single Responsibility Principle](http://deviq.com/single-responsibility-principle/) to push business logic out of the controller and into the domain model.
+> Controllers shouldn't be overly complicated by too many responsibilities. To keep controller logic from becoming overly complex, push business logic out of the controller and into the domain model.
 
 >[!TIP]
-> If you find that your controller actions frequently perform the same kinds of actions, you can follow the [Don't Repeat Yourself principle](http://deviq.com/don-t-repeat-yourself/) by moving these common actions into [filters](#filters).
+> If you find that your controller actions frequently perform the same kinds of actions, move these common actions into [filters](#filters).
 
 ## What is ASP.NET Core MVC
 
@@ -85,11 +83,11 @@ routes.MapRoute(name: "Default", template: "{controller=Home}/{action=Index}/{id
 [Route("api/[controller]")]
 public class ProductsController : Controller
 {
-  [HttpGet("{id}")]
-  public IActionResult GetProduct(int id)
-  {
-    ...
-  }
+    [HttpGet("{id}")]
+    public IActionResult GetProduct(int id)
+    {
+      ...
+    }
 }
 ```
 
@@ -99,7 +97,7 @@ ASP.NET Core MVC [model binding](models/model-binding.md) converts client reques
 
 ```csharp
 public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null) { ... }
-   ```
+```
 
 ### Model validation
 
@@ -140,12 +138,13 @@ The framework handles validating request data both on the client and on the serv
 
 ### Dependency injection
 
-ASP.NET Core has built-in support for [dependency injection (DI)](../fundamentals/dependency-injection.md). In ASP.NET Core MVC, [controllers](controllers/dependency-injection.md) can request needed services through their constructors, allowing them to follow the [Explicit Dependencies Principle](http://deviq.com/explicit-dependencies-principle/).
+ASP.NET Core has built-in support for [dependency injection (DI)](../fundamentals/dependency-injection.md). In ASP.NET Core MVC, [controllers](controllers/dependency-injection.md) can request needed services through their constructors, allowing them to follow the [Explicit Dependencies Principle](/dotnet/standard/modern-web-apps-azure-architecture/architectural-principles#explicit-dependencies).
 
 Your app can also use [dependency injection in view files](views/dependency-injection.md), using the `@inject` directive:
 
 ```cshtml
 @inject SomeService ServiceName
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -163,8 +162,7 @@ Your app can also use [dependency injection in view files](views/dependency-inje
 
 ```csharp
 [Authorize]
-   public class AccountController : Controller
-   {
+public class AccountController : Controller
 ```
 
 ### Areas
@@ -177,7 +175,7 @@ In addition to being a great platform for building web sites, ASP.NET Core MVC h
 
 The framework includes support for HTTP content-negotiation with built-in support to [format data](xref:web-api/advanced/formatting) as JSON or XML. Write [custom formatters](xref:web-api/advanced/custom-formatters) to add support for your own formats.
 
-Use link generation to enable support for hypermedia. Easily enable support for [cross-origin resource sharing (CORS)](http://www.w3.org/TR/cors/) so that your Web APIs can be shared across multiple Web applications.
+Use link generation to enable support for hypermedia. Easily enable support for [cross-origin resource sharing (CORS)](https://www.w3.org/TR/cors/) so that your Web APIs can be shared across multiple Web applications.
 
 ### Testability
 
@@ -187,11 +185,11 @@ The framework's use of interfaces and dependency injection make it well-suited t
 
 [ASP.NET Core MVC views](views/overview.md) use the [Razor view engine](views/razor.md) to render views. Razor is a compact, expressive and fluid template markup language for defining views using embedded C# code. Razor is used to dynamically generate web content on the server. You can cleanly mix server code with client side content and code.
 
-```text
+```cshtml
 <ul>
-  @for (int i = 0; i < 5; i++) {
-    <li>List item @i</li>
-  }
+    @for (int i = 0; i < 5; i++) {
+        <li>List item @i</li>
+    }
 </ul>
 ```
 
@@ -251,3 +249,8 @@ Tag Helpers provide an HTML-friendly development experience and a rich IntelliSe
 The <xref:Microsoft.Extensions.DependencyInjection.MvcCoreMvcBuilderExtensions.SetCompatibilityVersion*> method allows an app to opt-in or opt-out of potentially breaking behavior changes introduced in ASP.NET Core MVC 2.1 or later.
 
 For more information, see <xref:mvc/compatibility-version>.
+
+## Additional resources
+
+* [MyTested.AspNetCore.Mvc - Fluent Testing Library for ASP.NET Core MVC](https://github.com/ivaylokenov/MyTested.AspNetCore.Mvc): Strongly-typed unit testing library, providing a fluent interface for testing MVC and web API apps. (*Not maintained or supported by Microsoft.*)
+* <xref:blazor/components/integrate-components-into-razor-pages-and-mvc-apps>

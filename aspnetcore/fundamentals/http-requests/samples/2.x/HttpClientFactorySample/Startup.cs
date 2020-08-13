@@ -1,15 +1,14 @@
-using System;
-using System.Net.Http;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using HttpClientFactorySample.GitHub;
 using HttpClientFactorySample.Handlers;
 using HttpClientFactorySample.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Polly;
+using System;
+using System.Net.Http;
 
 namespace HttpClientFactorySample
 {
@@ -24,12 +23,6 @@ namespace HttpClientFactorySample
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
-
             // basic usage
             #region snippet1
             services.AddHttpClient();
@@ -138,7 +131,18 @@ namespace HttpClientFactorySample
                 });
             #endregion
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            #region snippet13
+            services.AddHttpClient("configured-disable-automatic-cookies")
+                .ConfigurePrimaryHttpMessageHandler(() =>
+                {
+                    return new SocketsHttpHandler()
+                    {
+                        UseCookies = false,
+                    };
+                });
+            #endregion
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
         
         // This method gets called by the runtime. Use this method to configure 
@@ -152,12 +156,8 @@ namespace HttpClientFactorySample
             else
             {
                 app.UseExceptionHandler("/Error");
-                app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseCookiePolicy();
             app.UseMvc();
         }
     }

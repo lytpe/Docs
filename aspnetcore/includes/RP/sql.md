@@ -2,9 +2,11 @@
 
 By [Rick Anderson](https://twitter.com/RickAndMSFT)
 
-The `MovieContext` object handles the task of connecting to the database and mapping `Movie` objects to database records. The database context is registered with the [Dependency Injection](xref:fundamentals/dependency-injection) container in the `ConfigureServices` method in the *Startup.cs* file:
+The `MovieContext` object handles the task of connecting to the database and mapping `Movie` objects to database records. The database context is registered with the [Dependency Injection (DI)](xref:fundamentals/dependency-injection) container in the `ConfigureServices` method in the *Startup.cs* file:
 
 [!code-csharp[](code/Startup.cs?name=snippet2&highlight=6-8)]
+
+For more information on using `DbContext` with DI, see [Using DbContext with DI](/ef/core/miscellaneous/configuring-dbcontext#using-dbcontext-with-dependency-injection).
 
 ## SQLite
 
@@ -12,7 +14,7 @@ The [SQLite](https://www.sqlite.org/) website states:
 
 > SQLite is a self-contained, high-reliability, embedded, full-featured, public-domain, SQL database engine. SQLite is the most used database engine in the world.
 
-There are many third party tools you can download to manage and view a SQLite database. The image below is from [DB Browser for SQLite](http://sqlitebrowser.org/). If you have a favorite SQLite tool, leave a comment on what you like about it.
+There are many third party tools you can download to manage and view a SQLite database. The image below is from [DB Browser for SQLite](https://sqlitebrowser.org/). If you have a favorite SQLite tool, leave a comment on what you like about it.
 
 ![DB Browser for SQLite showing movie db](../../tutorials/first-mvc-app-xplat/working-with-sql/_static/dbb.png)
 
@@ -32,6 +34,7 @@ if (context.Movie.Any())
 ```
 
 <a name="si"></a>
+
 ### Add the seed initializer
 
 Add the seed initializer to the `Main` method in the *Program.cs* file:

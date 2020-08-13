@@ -2,11 +2,18 @@
 title: ASP.NET Core MVC with EF Core - tutorial series
 author: rick-anderson
 description: 
-ms.author: tdykstra
-ms.date: 10/15/2017
+ms.author: riande
+ms.date: 03/27/2017
+no-loc: [cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: data/ef-mvc/index
 ---
 # ASP.NET Core MVC with EF Core - tutorial series
+
+::: moniker range=">= aspnetcore-3.0"
+
+This tutorial has **not** been updated to ASP.NET Core 3.0. The [Razor Pages version](xref:data/ef-rp/intro) has been updated. For information on when this might be updated, see [this GitHub issue](https://github.com/dotnet/AspNetCore.Docs/issues/13920).
+
+::: moniker-end
 
 [!INCLUDE [RP better than MVC](../../includes/RP-EF/rp-over-mvc.md)]
 

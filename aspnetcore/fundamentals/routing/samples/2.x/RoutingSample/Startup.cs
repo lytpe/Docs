@@ -29,7 +29,7 @@ namespace RoutingSample
 
             routeBuilder.MapRoute(
                 "Track Package Route",
-                "package/{operation:regex(^track|create|detonate$)}/{id:int}");
+                "package/{operation:regex(^track|create$)}/{id:int}");
 
             routeBuilder.MapGet("hello/{name}", context =>
             {
@@ -38,7 +38,7 @@ namespace RoutingSample
                 // To match HTTP GET "hello/<anything>/<anything>, 
                 // use routeBuilder.MapGet("hello/{*name}"
                 return context.Response.WriteAsync($"Hi, {name}!");
-            });            
+            });
 
             var routes = routeBuilder.Build();
             app.UseRouter(routes);

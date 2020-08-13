@@ -16,10 +16,12 @@ using RazorPagesProject.Tests.Helpers;
 namespace RazorPagesProject.Tests
 {
     #region snippet1
-    public class IndexPageTests : IClassFixture<CustomWebApplicationFactory<RazorPagesProject.Startup>>
+    public class IndexPageTests : 
+        IClassFixture<CustomWebApplicationFactory<RazorPagesProject.Startup>>
     {
         private readonly HttpClient _client;
-        private readonly CustomWebApplicationFactory<RazorPagesProject.Startup> _factory;
+        private readonly CustomWebApplicationFactory<RazorPagesProject.Startup> 
+            _factory;
 
         public IndexPageTests(
             CustomWebApplicationFactory<RazorPagesProject.Startup> factory)
@@ -73,28 +75,30 @@ namespace RazorPagesProject.Tests
 
                             try
                             {
-                                Utilities.InitializeDbForTests(db);
+                                Utilities.ReinitializeDbForTests(db);
                             }
                             catch (Exception ex)
                             {
                                 logger.LogError(ex, "An error occurred seeding " +
-                                    "the database with test messages. Error: " +
+                                    "the database with test messages. Error: {Message}" +
                                     ex.Message);
                             }
                         }
                     });
                 })
                 .CreateClient(new WebApplicationFactoryClientOptions
-                    {
-                        AllowAutoRedirect = false
-                    });
+                {
+                    AllowAutoRedirect = false
+                });
             var defaultPage = await client.GetAsync("/");
             var content = await HtmlHelpers.GetDocumentAsync(defaultPage);
 
             //Act
             var response = await client.SendAsync(
                 (IHtmlFormElement)content.QuerySelector("form[id='messages']"),
-                (IHtmlButtonElement)content.QuerySelector("button[id='deleteBtn1']"));
+                (IHtmlButtonElement)content.QuerySelector("form[id='messages']")
+                    .QuerySelector("div[class='panel-body']")
+                    .QuerySelector("button"));
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, defaultPage.StatusCode);
@@ -102,28 +106,6 @@ namespace RazorPagesProject.Tests
             Assert.Equal("/", response.Headers.Location.OriginalString);
         }
         #endregion
-
-        [Fact]
-        public async Task Post_AddMessageHandler_ReturnsRedirectToRoot()
-        {
-            // Arrange
-            var defaultPage = await _client.GetAsync("/");
-            var content = await HtmlHelpers.GetDocumentAsync(defaultPage);
-            var messageText = "Test message to add.";
-
-            // Act
-            var response = await _client.SendAsync(
-                (IHtmlFormElement)content.QuerySelector("form[id='addMessage']"),
-                (IHtmlButtonElement)content.QuerySelector("button[id='addMessageBtn']"),
-                new Dictionary<string, string> {
-                    ["Message.Text"] = messageText
-                });
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, defaultPage.StatusCode);
-            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-            Assert.Equal("/", response.Headers.Location.OriginalString);
-        }
 
         [Fact]
         public async Task Post_AddMessageHandler_ReturnsSuccess_WhenMissingMessageText()

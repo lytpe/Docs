@@ -4,12 +4,12 @@
 
 * Run the following commands in the command prompt:
 
-  ```console
+  ```dotnetcli
   dotnet restore
   dotnet ef migrations add Initial
   dotnet ef database update
   ```
-  
+
   [.NET Core](/dotnet/core/tools/index) is a cross-platform implementation of .NET. Here is what these commands do:
 
   * [dotnet restore](/dotnet/core/tools/dotnet-restore): Downloads the NuGet packages specified in the *.csproj* file.
